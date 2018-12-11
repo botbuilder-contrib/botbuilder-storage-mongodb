@@ -1,0 +1,17 @@
+{
+    "name": "testbot",
+    "dependencies": {
+        "botbuilder": "^4.0.6",
+        "botbuilder-greeting": "^1.0.1",
+        "mongodb": "^3.1.10",
+        "restify": "^4.3.0"
+    },
+    "scripts": {
+        "start": "node app.js"
+    },
+    "devDependencies": {
+        "@types/node": "^6.0.52",
+        "@types/restify": "^2.0.35",
+        "dotenv": "^6.0.0"
+    }
+}
