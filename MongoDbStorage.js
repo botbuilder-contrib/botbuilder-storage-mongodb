@@ -3,11 +3,10 @@ const MongoClient = require('mongodb').MongoClient;
 const url = 'mongodb://localhost:27017';
 const dbName = 'botframework';
 const client = new MongoClient(url);
-
+let etag = 1;
 class MongoDbStorage {
   constructor(memory = {}) {
     this.memory = memory;
-    this.etag = 1;
   }
 
   read(stateKeys) {
@@ -17,8 +16,13 @@ class MongoDbStorage {
           client.connect(function(err) {
             const db = client.db(dbName);
             const collection = db.collection('keys');
-            collection.findOne({theKey}, function(err, result) {
+            collection.findOne({name: theKey}, function(err, result) {
+              if(result==null){
+                  resolve({});
+              }
+              else{
               resolve(result);
+              }
               db.close();
             });
           }); 
@@ -34,11 +38,29 @@ class MongoDbStorage {
         });
       }
 
-      function saveItem(key, item) {
+      function getByKey(key){
+          return new Promise((resolve,reject)=>{
+            client.connect(function(err) {
+                const db = client.db(dbName);
+                const collection = db.collection('keys');
+                collection.findOne({name: key}, function(err, result) {
+                  if(result==null){
+                      resolve(null);
+                  }
+                  else{
+                  resolve(result);
+                  }
+                  db.close();
+                });
+              }); 
+          });
+      }
+      function addItem(key, item) {
           const clone = Object.assign({}, item);
-          clone.eTag = (that.etag++).toString();
           let data = {};
+          data["name"]=key;
           data[key]=clone;
+          data.eTag= clone.eTag;
           client.connect(function(err) {
             console.log("Connected successfully to server");
             const db = client.db(dbName);
@@ -47,16 +69,30 @@ class MongoDbStorage {
             });
           });          
       }
-      return new Promise((resolve, reject) => {
-          Object.keys(changes).forEach((key) => {
+      function saveItem(foo, item) {
+        var myquery = { name: foo };
+        let data = {};
+        data[foo]=item;
+        var newvalues = { $set: data };
+        client.connect(function(err) {
+          console.log("Connected successfully to server");
+          const db = client.db(dbName);
+          const collection = db.collection('keys');
+          collection.updateOne(myquery, newvalues, function(err, result) {
+            client.close();
+          });
+        });          
+    }
+      return new Promise(async (resolve, reject) => {
+          Object.keys(changes).forEach(async (key) => {
               const newItem = changes[key];
-              const old = this.memory[key];
-              if (!old || newItem.eTag === '*') {
-                  saveItem(key, newItem);
+              const old = await getByKey(key);
+              
+              if (!old) {
+                addItem(key, newItem);
               }
               else {
-                  const oldItem = JSON.parse(old);
-                  if (newItem.eTag === oldItem.eTag) {
+                   if (newItem.eTag === old.eTag || newItem.eTag == "*") {
                       saveItem(key, newItem);
                   }
                   else {
