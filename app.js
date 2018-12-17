@@ -13,9 +13,13 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log(`${server.name} listening to ${server.url}`);
 });
 
+const mongoStorage = new MongoDbStorage({
+  url : "mongodb://localhost:27017/",
+  database: "botframework"
+});
 
-const conversationState = new ConversationState(new MongoDbStorage());
-const userState = new UserState(new MongoDbStorage());
+const conversationState = new ConversationState(mongoStorage);
+const userState = new UserState(mongoStorage);
 
 let countProperty = userState.createProperty("CountProperty");
 
