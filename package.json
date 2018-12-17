@@ -9,8 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "tsc && node ./lib/index.js",
-    "watch": "tsc && node ./lib/index.js"
+    "start": "tsc && node index.js",
+    "watch": "tsc && node index.js"
   },
     "devDependencies": {
         "@types/node": "^6.0.52",

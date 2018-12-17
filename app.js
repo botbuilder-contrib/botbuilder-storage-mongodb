@@ -1,5 +1,5 @@
 const {BotFrameworkAdapter,ActivityTypes,ConversationState, UserState} = require('botbuilder');
-const {MongoDbStorage} = require('./MongoDbStorage');
+const {MongoDbStorage} = require('./lib/MongoDbStorage');
 const BotGreeting = require('botbuilder-greeting');
 
 let server = require('restify').createServer();

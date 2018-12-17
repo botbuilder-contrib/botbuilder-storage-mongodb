@@ -1,112 +1,56 @@
 import { Storage, StoreItems } from 'botbuilder-core';
 import {MongoClient} from 'mongodb';
+
 export class MongoDbStorage implements Storage {
   settings:any;
-  mongoClient: any;
+  client:any;
   eTag: number;
-  constructor(){
-    this.settings = {
-      url : 'mongodb://localhost:27017',
-      database : 'dbName'
+  constructor(settings){
+    if (!settings) {
+      throw new Error('The settings parameter is required.');
     }
-    this.mongoClient = new MongoClient(this.settings.url);
+    if (!settings.url || settings.url.trim() === '') {
+     throw new Error('The settings url required.');
+    }
+    if (!settings.database || settings.database.trim() === '') {
+     throw new Error('The settings dataBase name is required.');
+    }
+    if (!settings.collection || settings.collection.trim() === '') {
+     settings.collection = 'botframeworkstate';
+    }
+    this.settings = {...settings};   
     this.eTag = 1;
   }
- async read(stateKeys: string[]): Promise<StoreItems>{
+  
+  async read(stateKeys: string[]): Promise<StoreItems>{
     return new Promise<StoreItems>(async (resolve, reject) => {
-      let self = this;
-      const theKey = stateKeys[0];
-      const data = {};
-      this.mongoClient.connect((err) => {
-        const db = self.mongoClient.db(self.settings.database);
-        const collection = db.collection('keys');
-        collection.findOne({name: theKey}, function(err, result) {
-          if(result==null){
-              resolve({});
-          }
-          else{
-          resolve(result);
-          }
-          db.close();
-        });
-      }); 
+      const storeItems: StoreItems = {};
+      for(let i =0;i<stateKeys.length;i++){
+        const key = stateKeys[i];
+        const document : any = await this.getByKey(key);
+        if(document){
+          storeItems[key] = document.value;
+        }
+      }
+      resolve(storeItems);
     });
   }
-
+  
   async write(changes: StoreItems): Promise<void> {
     return new Promise<void>( async (resolve, reject) => {
-      const that = this;
-      const insertDocuments = function(db,item, callback) {
-        const collection = db.collection('keys');
-        collection.insertMany([item], function(err, result) {
-          callback(result);
-        });
-      }
-
-      function getByKey(key){
-          return new Promise((resolve,reject)=>{
-            this.mongoClient.connect(function(err) {
-                const db = this.mongoClient.db(this.settings.database);
-                const collection = db.collection('keys');
-                collection.findOne({name: key}, function(err, result) {
-                  if(result==null){
-                      resolve(null);
-                  }
-                  else{
-                  resolve(result);
-                  }
-                  db.close();
-                });
-              }); 
-          });
-      }
-      function addItem(key, item) {
-          const clone = Object.assign({}, item);
-          let data = {};
-          data["name"]=key;
-          data[key]=clone;
-          data["eTag"]= clone.eTag;
-          this.mongoClient.connect(function(err) {
-            console.log("Connected successfully to server");
-            const db = this.mongoClient.db(this.settings.database);
-            insertDocuments(db,data, function() {
-              this.mongoClient.close();
-            });
-          });          
-      }
-      function saveItem(foo, item) {
-        var myquery = { name: foo };
-        let data = {};
-        data[foo]=item;
-        var newvalues = { $set: data };
-        this.mongoClient.connect(function(err) {
-          console.log("Connected successfully to server");
-          const db = this.mongoClient.db(this.settings.database);
-          const collection = db.collection('keys');
-          collection.updateOne(myquery, newvalues, function(err, result) {
-            this.mongoClient.close();
-          });
-        });          
-    }
-      return new Promise(async (resolve, reject) => {
-          Object.keys(changes).forEach(async (key) => {
-              const newItem = changes[key];
-              const old = await getByKey(key);
-              
-              if (!old) {
-                addItem(key, newItem);
-              }
-              else {
-                   if (newItem.eTag === old["eTag"] || newItem.eTag == "*") {
-                      saveItem(key, newItem);
-                  }
-                  else {
-                      reject(new Error(`Storage: error writing "${key}" due to eTag conflict.`));
-                  }
-              }
-          });
-          resolve();
-      });
+      Object.keys(changes).forEach(async (key) => {
+        const newItem = changes[key];
+        const old : any = await this.getByKey(key);
+        if (!old){ 
+          this.insertDocument(key, newItem, resolve);
+        }
+        else if(newItem.eTag === old.eTag || newItem.eTag == "*") {
+          this.updateDocument(key,newItem,resolve);
+        }
+        else {
+          reject(new Error(`Storage: error writing "${key}" due to eTag conflict.`));
+        }
+      });      
     });
   }
 
@@ -115,4 +59,49 @@ export class MongoDbStorage implements Storage {
       resolve();
     });
   }
+  async getCollection() : Promise<any>{
+    return new Promise(async (resolve, reject) => {
+      if(!this.client){
+        this.client = await MongoClient.connect(this.settings.url, { useNewUrlParser: true })
+      }
+      resolve(this.client.db(this.settings.database).collection(this.settings.collection));
+    }); 
+  }
+
+  getByKey(key){
+    return new Promise(async (resolve,reject)=>{
+      let collection = await this.getCollection();
+      collection.findOne({_id: key}, function(err, result) {
+        resolve(result);
+      });
+    });
+  }
+
+  async insertDocument(key, item, resolve) {
+    const clone = Object.assign({}, item);
+    const data = {
+      _id : key,
+      value : clone,
+      eTag : clone.eTag
+    };
+    const collection = await this.getCollection();
+    collection.insertMany([data], function(err, result) {
+      resolve(result);
+    });          
+  }  
+
+  async updateDocument(key, item,resolve) {
+    const query = { _id: key };
+    const clone = Object.assign({}, item);
+    const data = {
+      _id : key,
+      value : clone,
+      eTag : clone.eTag
+    };
+    const updateStatement = { $set: data };
+    const collection = await this.getCollection();
+    collection.updateOne(query, updateStatement, function(err, result) {
+      resolve();
+    });
+  } 
 }
