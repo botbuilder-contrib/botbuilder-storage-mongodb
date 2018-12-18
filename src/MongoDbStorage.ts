@@ -6,9 +6,7 @@ export interface MongoDbStorageSettings {
   database: string;
   collection: string;
 }
-/**
- * @private
- */
+
 interface MongoDocumentStoreItem {
   _id: string;
   data: any;
