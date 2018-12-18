@@ -38,6 +38,9 @@ export class MongoDbStorage implements Storage {
   
   public async read(stateKeys: string[]): Promise<StoreItems>{
     return new Promise<StoreItems>(async (resolve, reject) => {
+      if (!stateKeys || stateKeys.length == 0) {
+        return resolve({});
+      }
       const storeItems: StoreItems = {};
       for(let i =0;i<stateKeys.length;i++){
         const key = stateKeys[i];

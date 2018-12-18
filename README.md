@@ -21,7 +21,7 @@ const conversationState = new ConversationState(mongoStorage);
 * collection (optional): The name of the collection where the state documents will be stored. If omitted, the name "botframeworkstate" will be used.
 
 ### Running Unit Tests
-(coming soon.)
+```npm run test```
 
 
 
