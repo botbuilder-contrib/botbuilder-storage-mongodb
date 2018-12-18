@@ -1,11 +1,25 @@
-import { Storage, StoreItems } from 'botbuilder-core';
+import { Storage, StoreItems } from 'botbuilder';
 import {MongoClient} from 'mongodb';
 
+export interface MongoDbStorageSettings {
+  url: string;
+  database: string;
+  collection: string;
+}
+/**
+ * @private
+ */
+interface MongoDocumentStoreItem {
+  _id: string;
+  data: any;
+  eTag: string;
+}
 export class MongoDbStorage implements Storage {
-  settings:any;
-  client:any;
-  eTag: number;
-  constructor(settings){
+  private settings:any;
+  private client:any;
+  private eTag: number;
+
+  constructor(settings : MongoDbStorageSettings){
     if (!settings) {
       throw new Error('The settings parameter is required.');
     }
@@ -22,21 +36,21 @@ export class MongoDbStorage implements Storage {
     this.eTag = 1;
   }
   
-  async read(stateKeys: string[]): Promise<StoreItems>{
+  public async read(stateKeys: string[]): Promise<StoreItems>{
     return new Promise<StoreItems>(async (resolve, reject) => {
       const storeItems: StoreItems = {};
       for(let i =0;i<stateKeys.length;i++){
         const key = stateKeys[i];
-        const document : any = await this.getByKey(key);
+        const document : MongoDocumentStoreItem = await this.getByKey(key);
         if(document){
-          storeItems[key] = document.value;
+          storeItems[key] = document.data;
         }
       }
       resolve(storeItems);
     });
   }
   
-  async write(changes: StoreItems): Promise<void> {
+  public async write(changes: StoreItems): Promise<void> {
     return new Promise<void>( async (resolve, reject) => {
       Object.keys(changes).forEach(async (key) => {
         const newItem = changes[key];
@@ -54,12 +68,13 @@ export class MongoDbStorage implements Storage {
     });
   }
 
-  delete(keys: string[]): Promise<void> {
+  public delete(keys: string[]): Promise<void> {
     return new Promise<void>((resolve, reject)=>{
       resolve();
     });
   }
-  async getCollection() : Promise<any>{
+
+  private async getCollection() : Promise<any>{
     return new Promise(async (resolve, reject) => {
       if(!this.client){
         this.client = await MongoClient.connect(this.settings.url, { useNewUrlParser: true })
@@ -68,7 +83,7 @@ export class MongoDbStorage implements Storage {
     }); 
   }
 
-  getByKey(key){
+  private getByKey(key) : Promise<MongoDocumentStoreItem>{
     return new Promise(async (resolve,reject)=>{
       let collection = await this.getCollection();
       collection.findOne({_id: key}, function(err, result) {
@@ -77,28 +92,28 @@ export class MongoDbStorage implements Storage {
     });
   }
 
-  async insertDocument(key, item, resolve) {
+  private async insertDocument(key, item, resolve) {
     const clone = Object.assign({}, item);
-    const data = {
+    const document : MongoDocumentStoreItem = {
       _id : key,
-      value : clone,
+      data : clone,
       eTag : clone.eTag
     };
     const collection = await this.getCollection();
-    collection.insertMany([data], function(err, result) {
+    collection.insertMany([document], function(err, result) {
       resolve(result);
     });          
   }  
 
-  async updateDocument(key, item,resolve) {
+  private async updateDocument(key, item,resolve) {
     const query = { _id: key };
     const clone = Object.assign({}, item);
-    const data = {
+    const document : MongoDocumentStoreItem = {
       _id : key,
-      value : clone,
+      data : clone,
       eTag : clone.eTag
     };
-    const updateStatement = { $set: data };
+    const updateStatement = { $set: document };
     const collection = await this.getCollection();
     collection.updateOne(query, updateStatement, function(err, result) {
       resolve();
