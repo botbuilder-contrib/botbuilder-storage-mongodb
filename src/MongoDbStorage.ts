@@ -51,7 +51,11 @@ export class MongoDbStorage implements Storage {
   }
   
   public async write(changes: StoreItems): Promise<void> {
-    return new Promise<void>( async (resolve, reject) => {
+    if (!changes || Object.keys(changes).length === 0) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>( async (resolve: any, reject: any) => {
       Object.keys(changes).forEach(async (key) => {
         const newItem = changes[key];
         const old : any = await this.getByKey(key);
