@@ -58,14 +58,13 @@ export class MongoDbStorage implements Storage {
     const operations = [];
 
     Object.keys(changes).forEach(key => {
+      const state = changes[key];
       operations.push({
         updateOne: {
-          filter: {
-            _id: key
-          },
+          filter: MongoDbStorage.createFilter(key, state.eTag),
           update: {
             $set: {
-              state: changes[key],
+              state: state,
               dt: new Date()
             }
           },
@@ -74,7 +73,8 @@ export class MongoDbStorage implements Storage {
       })
     })
 
-    await this.Collection.bulkWrite(operations);
+    const bulkResults = await this.Collection.bulkWrite(operations);
+    /// TODO: process results to properly communicate failure.
 
   }
 
@@ -82,6 +82,12 @@ export class MongoDbStorage implements Storage {
     await this.Collection.deleteMany({ _id: { $in: keys } });
   }
 
+  public static createFilter(key: string, etag: any) {
+    if (etag === '*' || !etag) {
+      return { _id: key };
+    }
+    return { _id: key, 'state.eTag': etag };
+  }
   get Collection(): Collection<MongoDocumentStoreItem> {
     return this.client.db(this.settings.database).collection(this.settings.collection);
   }
