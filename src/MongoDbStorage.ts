@@ -81,6 +81,9 @@ export class MongoDbStorage implements Storage {
   }
 
   public async delete(keys: string[]): Promise<void> {
+    if (!keys || keys.length == 0) {
+      return;
+    }    
     await this.Collection.deleteMany({ _id: { $in: keys } });
   }
 
