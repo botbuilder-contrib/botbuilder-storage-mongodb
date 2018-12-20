@@ -41,3 +41,22 @@ describe('MongoDbStorage - Input verification', function () {
         const storeItems = await storage.delete(null);
     });
 });
+
+describe('MongoDbStorage - Create filter tests', function () {
+    describe('createFilter', function(){
+        it('omits etag if etag is *', async function () {
+            const actual = MongoDbStorage.createFilter('k','*');
+            assert.deepEqual(actual, {_id: 'k'});  
+        });
+    
+        it('omits etag if etag is null', async function () {   
+            const actual = MongoDbStorage.createFilter('k',null);
+            assert.deepEqual(actual, {_id: 'k'});  
+        });
+    
+        it('includes etag if etag is valid', async function () {
+            const actual = MongoDbStorage.createFilter('k','0xff44');
+            assert.deepEqual(actual, {_id: 'k', 'state.eTag': '0xff44'});  
+        });
+    })
+});

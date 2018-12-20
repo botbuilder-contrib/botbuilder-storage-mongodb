@@ -17,6 +17,14 @@ export declare class MongoDbStorage implements Storage {
     read(stateKeys: string[]): Promise<StoreItems>;
     write(changes: StoreItems): Promise<void>;
     delete(keys: string[]): Promise<void>;
+    static shouldSlam(etag: any): boolean;
+    static createFilter(key: string, etag: any): {
+        _id: string;
+        'state.eTag'?: undefined;
+    } | {
+        _id: string;
+        'state.eTag': any;
+    };
     readonly Collection: Collection<MongoDocumentStoreItem>;
 }
 export {};
