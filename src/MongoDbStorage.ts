@@ -1,5 +1,5 @@
 import { Storage, StoreItems } from 'botbuilder';
-import { MongoClient, Collection } from 'mongodb';
+import { MongoClient, Collection, ObjectID } from 'mongodb';
 
 export interface MongoDbStorageSettings {
   url: string;
@@ -59,35 +59,42 @@ export class MongoDbStorage implements Storage {
 
     Object.keys(changes).forEach(key => {
       const state = changes[key];
+      const shouldSlam = MongoDbStorage.shouldSlam(state.eTag);
+      const oldETag = state.eTag;
+      state.eTag = new ObjectID().toHexString();
       operations.push({
         updateOne: {
-          filter: MongoDbStorage.createFilter(key, state.eTag),
+          filter: MongoDbStorage.createFilter(key, oldETag),
           update: {
             $set: {
               state: state,
               dt: new Date()
             }
           },
-          upsert: true
+          upsert: shouldSlam
         }
       })
     })
 
     const bulkResults = await this.Collection.bulkWrite(operations);
-    /// TODO: process results to properly communicate failure.
-
+    //TODO: process bulk results: if 0 modified, 0 upserted then throw exception because state was not mutated.
   }
 
   public async delete(keys: string[]): Promise<void> {
     await this.Collection.deleteMany({ _id: { $in: keys } });
   }
 
+  public static shouldSlam(etag: any) {
+    return (etag === '*' || !etag);
+  }
+
   public static createFilter(key: string, etag: any) {
-    if (etag === '*' || !etag) {
+    if (this.shouldSlam(etag)) {
       return { _id: key };
     }
     return { _id: key, 'state.eTag': etag };
   }
+
   get Collection(): Collection<MongoDocumentStoreItem> {
     return this.client.db(this.settings.database).collection(this.settings.collection);
   }

@@ -30,26 +30,27 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
   let nameProperty = userState.createProperty("nameP");
 
   async function save(context, count, name,cState) {
-    await conversationProperty.set(context,cState);
-    await nameProperty.set(context, name);
-    await countProperty.set(context, count);
-    await userState.saveChanges(context);
-    await conversationState.saveChanges(context);
+    
+   // await nameProperty.set(context, name);
+   // await countProperty.set(context, count);
+   // await userState.saveChanges(context);
+   await conversationProperty.set(context,cState);
+   await conversationState.saveChanges(context);
   }
+  let count = 0;
+  let name = "";
   server.post('/api/messages', async (req, res) => {
 
     adapter.processActivity(req, res, async context => {
 
       if (context.activity.type == ActivityTypes.Message) {
         let conversation = await conversationProperty.get(context,{});
-        let count = await countProperty.get(context, 0);
-        let name = await nameProperty.get(context,"");
+       // let count = await countProperty.get(context, 0);
+      //  let name = await nameProperty.get(context,"");
 
         name = "hattan" + count;
         count++;
         conversation = {
-          channel: "foo"+count,
-          name,
           count
         };
 
