@@ -217,26 +217,31 @@ describe('MongoDbStorage ', function () {
   describe('read', async function (done) {
     it('should call Collection.find with query that includes keys that are passed in', async function () {
       //arrange
-
-      let fake = sinon.fake.returns({
-        find : function(query){
-          console.log(query);
-        }
-      });
-
-      sinon.replace(MongoDbStorage, 'Collection', fake);
-
+      
       const storage = new MongoDbStorage({
         url: 'fake_url',
         database: 'fake_db'
       });
+      sinon.stub(MongoClient, "connect");
+      let query = null;
+      stub1 = sinon.stub(storage, 'Collection').value({
+        find : function(q){
+          return {
+            toArray : function(){
+              query = q;
+              return [];
+            }
+          };
+        }
+      });
       const keys = ['abc','123','456'];
+
       //act
       await storage.connect();
       await storage.read(keys);
 
       //assert
-      assert.deepEqual({ _id: { $in: keys }},MongoClient.db.collection.getCall(0).args[0]);
+      assert.deepEqual({ _id: { $in: keys }},query);
 
       //cleanup
       sinon.restore();
