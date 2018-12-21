@@ -1,6 +1,7 @@
 import { Storage, StoreItems } from 'botbuilder';
 import { MongoClient, Collection, ObjectID } from 'mongodb';
 
+
 export interface MongoDbStorageSettings {
   url: string;
   database: string;
@@ -21,7 +22,7 @@ export class MongoDbStorage implements Storage {
       throw new Error('The settings parameter is required.');
     }
     if (!settings.url || settings.url.trim() === '') {
-      throw new Error('The settings url required.');
+      throw new Error('The settings url is required.');
     }
     if (!settings.database || settings.database.trim() === '') {
       throw new Error('The settings dataBase name is required.');
