@@ -25,5 +25,9 @@ Unit tests are in pure javascript. The npm run test command executes tsc then in
 
 ```npm run test```
 
+#### Code Coverage
+Invoke either coverage.bat or coverage.sh from a command line. This will create a coverage folder. Open the index.html file in a browser.
+
+
 
 
