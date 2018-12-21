@@ -241,12 +241,48 @@ describe('MongoDbStorage ', function () {
       await storage.read(keys);
 
       //assert
-      assert.deepEqual({ _id: { $in: keys }},query);
+      assert.deepEqual(query,{ _id: { $in: keys }});
 
       //cleanup
       sinon.restore();
     });
 
+    it('should return storeItems as a dictionary', async function () {
+      //arrange
+      
+      const storage = new MongoDbStorage({
+        url: 'fake_url',
+        database: 'fake_db'
+      });
+      sinon.stub(MongoClient, "connect");
+      stub1 = sinon.stub(storage, 'Collection').value({
+        find : function(q){
+          return {
+            toArray : function(){
+              return [
+                {_id : 'abc', state :'some_state'},
+                {_id : '123', state :{foo: 'bar'}},
+                {_id : '456', state: 1234}
+              ];
+            }
+          };
+        }
+      });
+      const keys = ['abc','123','456'];
+      const expected = {
+        'abc' : 'some_state',
+        '123' : {foo: 'bar'},
+        '456' : 1234
+      };
+      //act
+      await storage.connect();
+      let storeItems = await storage.read(keys);
 
+      //assert
+      assert.deepEqual(storeItems,expected);
+
+      //cleanup
+      sinon.restore();
+    });
   });  
 });
