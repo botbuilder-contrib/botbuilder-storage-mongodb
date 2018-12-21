@@ -1,9 +1,15 @@
 const assert = require('assert');
-const { MongoDbStorage } = require('../lib/MongoDbStorage');
+const {
+  MongoDbStorage,
+  MongoDbStorageError,
+  MongoDbStorageConfig
+} = require('../lib/MongoDbStorage');
 const sinon = require('sinon');
 
 //require MongoClient to set up fakes and stubs, not actual database connectivity
-const { MongoClient } = require('mongodb');
+const {
+  MongoClient
+} = require('mongodb');
 
 
 const getSettings = () => ({
@@ -50,17 +56,24 @@ describe('MongoDbStorage ', function () {
   describe('createFilter', function () {
     it('omits etag if etag is *', async function () {
       const actual = MongoDbStorage.createFilter('k', '*');
-      assert.deepEqual(actual, { _id: 'k' });
+      assert.deepEqual(actual, {
+        _id: 'k'
+      });
     });
 
     it('omits etag if etag is null', async function () {
       const actual = MongoDbStorage.createFilter('k', null);
-      assert.deepEqual(actual, { _id: 'k' });
+      assert.deepEqual(actual, {
+        _id: 'k'
+      });
     });
 
     it('includes etag if etag is valid', async function () {
       const actual = MongoDbStorage.createFilter('k', '0xff44');
-      assert.deepEqual(actual, { _id: 'k', 'state.eTag': '0xff44' });
+      assert.deepEqual(actual, {
+        _id: 'k',
+        'state.eTag': '0xff44'
+      });
     });
   });
 
@@ -81,78 +94,50 @@ describe('MongoDbStorage ', function () {
     });
   });
 
-  describe('constructor', function () {
-    it('should throw an error if settings is not passed in', async function () {
-      const expected = new Error(`The settings parameter is required.`);
-      const actual = () => new MongoDbStorage();
-      assert.throws(actual, expected);
+  describe('ensureConfig', function () {
+
+    it('should throw an error if config is not passed in', function () {
+      const actual = () => MongoDbStorage.ensureConfig();
+      assert.throws(actual, MongoDbStorageError.NO_CONFIG_ERROR);
     });
 
-    it('should throw an error if settings object does not include a url', async function () {
-      const expected = new Error(`The settings url is required.`);
-      const actual = () => new MongoDbStorage({});
-      assert.throws(actual, expected);
+    it('should throw an error if config is empty', function () {
+      const actual = () => MongoDbStorage.ensureConfig({});
+      assert.throws(actual, MongoDbStorageError.NO_URL_ERROR);
     });
 
-    it('should throw an error if settings object url is empty string', async function () {
-      const expected = new Error(`The settings url is required.`);
-      const settings = {
-        url: ''
-      };
-      const actual = () => new MongoDbStorage(settings);
-      assert.throws(actual, expected);
+    it('should use supplied database name', function () {
+      const expected = 'someDb';
+      const actual = MongoDbStorage.ensureConfig({
+        url: 'u',
+        database: expected
+      });
+      assert.equal(actual.database, expected);
     });
 
-    it('should have a settings object with passed in url', async function () {
-      const fake_url = 'a_fake_mongo_url';
-      const settings = {
-        url: fake_url,
-        database: 'fake_db'
-      };
-      const storage = new MongoDbStorage(settings);
-      const actual = storage.settings.url;
-      assert.equal(actual, fake_url);
+    it('should use default database name', function () {
+      const expected = MongoDbStorage.DEFAULT_DB_NAME;
+      const actual = MongoDbStorage.ensureConfig({
+        url: 'u',
+      });
+      assert.equal(actual.database, expected, 'Expected default database name');
     });
 
-    it('should throw an error if settings object does not include a database name', async function () {
-      const expected = new Error(`The settings dataBase name is required.`);
-      const settings = {
-        url: 'fake_url'
-      };
-      const actual = () => new MongoDbStorage(settings);
-      assert.throws(actual, expected);
+    it('should use default collection name', function () {
+      const expected = MongoDbStorage.DEFAULT_COLLECTION_NAME;
+      const actual = MongoDbStorage.ensureConfig({
+        url: 'u',
+      });
+      assert.equal(actual.collection, expected, 'Expected default collection name');
     });
 
-    it('should throw an error if settings object database name is empty string', async function () {
-      const expected = new Error(`The settings dataBase name is required.`);
-      const settings = {
-        url: 'fake_url',
-        database: ''
-      };
-      const actual = () => new MongoDbStorage(settings);
-      assert.throws(actual, expected);
-    });
-
-    it('should have a settings object with passed in database', async function () {
-      const fake_db = 'a_fake_db';
-      const settings = {
-        url: 'a_fake_url',
-        database: fake_db
-      };
-      const storage = new MongoDbStorage(settings);
-      const actual = storage.settings.database;
-      assert.equal(actual, fake_db);
-    });
-
-    it('should use the default collection is collection is omitted in settings', async function () {
-      const settings = {
-        url: 'fake_url',
-        database: 'fake_db'
-      };
-      const expected = 'botframeworkstate';
-      const storage = new MongoDbStorage(settings);
-      const actual = storage.settings.collection;
-      assert.equal(actual, expected);
+    it('should use supplied collection name', function () {
+      const expected = 'someCollection';
+      const actual = MongoDbStorage.ensureConfig({
+        url: 'u',
+        collection: expected
+      });
+      assert.equal(actual.collection, expected, 'Expected default collection name');
     });
 
   });
@@ -241,10 +226,14 @@ describe('MongoDbStorage ', function () {
       await storage.read(keys);
 
       //assert
-      assert.deepEqual(query, { _id: { $in: keys } });
+      assert.deepEqual(query, {
+        _id: {
+          $in: keys
+        }
+      });
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
 
     it('should return storeItems as a dictionary', async function () {
@@ -259,10 +248,20 @@ describe('MongoDbStorage ', function () {
         find: function (q) {
           return {
             toArray: function () {
-              return [
-                { _id: 'abc', state: 'some_state' },
-                { _id: '123', state: { foo: 'bar' } },
-                { _id: '456', state: 1234 }
+              return [{
+                  _id: 'abc',
+                  state: 'some_state'
+                },
+                {
+                  _id: '123',
+                  state: {
+                    foo: 'bar'
+                  }
+                },
+                {
+                  _id: '456',
+                  state: 1234
+                }
               ];
             }
           };
@@ -271,7 +270,9 @@ describe('MongoDbStorage ', function () {
       const keys = ['abc', '123', '456'];
       const expected = {
         'abc': 'some_state',
-        '123': { foo: 'bar' },
+        '123': {
+          foo: 'bar'
+        },
         '456': 1234
       };
       //act
@@ -282,7 +283,7 @@ describe('MongoDbStorage ', function () {
       assert.deepEqual(storeItems, expected);
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
   });
 
@@ -313,10 +314,14 @@ describe('MongoDbStorage ', function () {
       await storage.read(keys);
 
       //assert
-      assert.deepEqual(query, { _id: { $in: keys } });
+      assert.deepEqual(query, {
+        _id: {
+          $in: keys
+        }
+      });
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
 
     it('should return storeItems as a dictionary', async function () {
@@ -331,10 +336,20 @@ describe('MongoDbStorage ', function () {
         find: function (q) {
           return {
             toArray: function () {
-              return [
-                { _id: 'abc', state: 'some_state' },
-                { _id: '123', state: { foo: 'bar' } },
-                { _id: '456', state: 1234 }
+              return [{
+                  _id: 'abc',
+                  state: 'some_state'
+                },
+                {
+                  _id: '123',
+                  state: {
+                    foo: 'bar'
+                  }
+                },
+                {
+                  _id: '456',
+                  state: 1234
+                }
               ];
             }
           };
@@ -343,7 +358,9 @@ describe('MongoDbStorage ', function () {
       const keys = ['abc', '123', '456'];
       const expected = {
         'abc': 'some_state',
-        '123': { foo: 'bar' },
+        '123': {
+          foo: 'bar'
+        },
         '456': 1234
       };
       //act
@@ -354,7 +371,7 @@ describe('MongoDbStorage ', function () {
       assert.deepEqual(storeItems, expected);
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
   });
 
@@ -373,8 +390,14 @@ describe('MongoDbStorage ', function () {
         }
       });
       const changes = {
-        'key_one': { item: "foo", eTag: "*" },
-        'key_two': { item: "foo", eTag: "*" }
+        'key_one': {
+          item: "foo",
+          eTag: "*"
+        },
+        'key_two': {
+          item: "foo",
+          eTag: "*"
+        }
       };
 
       //act
@@ -386,7 +409,7 @@ describe('MongoDbStorage ', function () {
       assert.equal(operations[1].updateOne.filter._id, "key_two");
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
 
     it('creates sets upsert property to true if shouldSlam.', async function () {
@@ -403,7 +426,10 @@ describe('MongoDbStorage ', function () {
         }
       });
       const changes = {
-        'key_one': { item: "foo", eTag: "*" }
+        'key_one': {
+          item: "foo",
+          eTag: "*"
+        }
       };
 
       //act
@@ -414,7 +440,7 @@ describe('MongoDbStorage ', function () {
       assert.ok(operations[0].updateOne.upsert);
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
     it('creates sets upsert property to false if !shouldSlam.', async function () {
       //arrange
@@ -430,7 +456,10 @@ describe('MongoDbStorage ', function () {
         }
       });
       const changes = {
-        'key_one': { item: "foo", eTag: "123456" }
+        'key_one': {
+          item: "foo",
+          eTag: "123456"
+        }
       };
 
       //act
@@ -441,7 +470,7 @@ describe('MongoDbStorage ', function () {
       assert.ok(operations[0].updateOne.upsert == false);
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
 
     it('creates $set property with correct state update values', async function () {
@@ -458,7 +487,10 @@ describe('MongoDbStorage ', function () {
         }
       });
       const changes = {
-        'key_one': { item: "foo", eTag: "*" }
+        'key_one': {
+          item: "foo",
+          eTag: "*"
+        }
       };
 
       //act
@@ -469,7 +501,7 @@ describe('MongoDbStorage ', function () {
       assert.deepEqual(operations[0].updateOne.update.$set.state.item, "foo");
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
   });
 
@@ -487,16 +519,20 @@ describe('MongoDbStorage ', function () {
           query = q;
         }
       });
-      const keys = ['123','aaa','bbb'];
+      const keys = ['123', 'aaa', 'bbb'];
       //act
       await storage.connect();
       await storage.delete(keys);
 
       //assert
-      assert.deepEqual(query, { _id: { $in: keys } });
+      assert.deepEqual(query, {
+        _id: {
+          $in: keys
+        }
+      });
 
       //cleanup
-      MongoClient.connect.restore(); 
+      MongoClient.connect.restore();
     });
   });
 
@@ -509,11 +545,11 @@ describe('MongoDbStorage ', function () {
         database: 'fake_db'
       });
 
-      storage.client={
-        db : function(d){
-          database=d;
+      storage.client = {
+        db: function (d) {
+          database = d;
           return {
-            collection : function(){}
+            collection: function () {}
           }
         }
       };
@@ -522,11 +558,11 @@ describe('MongoDbStorage ', function () {
       let collection = storage.Collection;
 
       //assert
-      assert.equal(database,"fake_db");
+      assert.equal(database, "fake_db");
     });
     it('calls MongoClient.db.collection with collection name', async function () {
       //arrange
-      let collectionName = 'fake_collection_' +  new Date();
+      let collectionName = 'fake_collection_' + new Date();
       let actual = null;
       const storage = new MongoDbStorage({
         url: 'fake_url',
@@ -534,11 +570,11 @@ describe('MongoDbStorage ', function () {
         collection: collectionName
       });
 
-      storage.client={
-        db : function(d){
+      storage.client = {
+        db: function (d) {
           return {
-            collection : function(c){
-              actual=c;
+            collection: function (c) {
+              actual = c;
             }
           }
         }
@@ -548,11 +584,8 @@ describe('MongoDbStorage ', function () {
       let collection = storage.Collection;
 
       //assert
-      assert.equal(actual,collectionName);
-    });    
-  });  
+      assert.equal(actual, collectionName);
+    });
+  });
 
 });
-
-
-

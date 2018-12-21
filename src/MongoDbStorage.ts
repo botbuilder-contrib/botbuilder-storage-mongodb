@@ -2,10 +2,17 @@ import { Storage, StoreItems } from 'botbuilder';
 import { MongoClient, Collection, ObjectID } from 'mongodb';
 
 
-export interface MongoDbStorageSettings {
+
+
+export interface MongoDbStorageConfig {
   url: string;
-  database: string;
-  collection: string;
+  database?: string;
+  collection?: string;
+}
+
+export class MongoDbStorageError extends Error {
+  public static readonly NO_CONFIG_ERROR: MongoDbStorageError = new MongoDbStorageError('MongoDbStorageConfig is required.');
+  public static readonly NO_URL_ERROR: MongoDbStorageError = new MongoDbStorageError('MongoDbStorageConfig.url is required.');
 }
 
 interface MongoDocumentStoreItem {
@@ -14,27 +21,37 @@ interface MongoDocumentStoreItem {
 }
 
 export class MongoDbStorage implements Storage {
-  private settings: any;
+  private config: any;
   private client: any;
+  static readonly DEFAULT_COLLECTION_NAME: string = "State";
+  static readonly DEFAULT_DB_NAME: string = "BotFramework";
 
-  constructor(settings: MongoDbStorageSettings) {
-    if (!settings) {
-      throw new Error('The settings parameter is required.');
+  constructor(config: MongoDbStorageConfig) {
+    this.config = MongoDbStorage.ensureConfig({ ...config });
+  }
+
+  public static ensureConfig(config: MongoDbStorageConfig): MongoDbStorageConfig {
+    if (!config) {
+      throw MongoDbStorageError.NO_CONFIG_ERROR;
     }
-    if (!settings.url || settings.url.trim() === '') {
-      throw new Error('The settings url is required.');
+
+    if (!config.url || config.url.trim() === '') {
+      throw MongoDbStorageError.NO_URL_ERROR;
     }
-    if (!settings.database || settings.database.trim() === '') {
-      throw new Error('The settings dataBase name is required.');
+
+    if (!config.database || config.database.trim() == '') {
+      config.database = MongoDbStorage.DEFAULT_DB_NAME;
     }
-    if (!settings.collection || settings.collection.trim() === '') {
-      settings.collection = 'botframeworkstate';
+
+    if (!config.collection || config.collection.trim() == '') {
+      config.collection = MongoDbStorage.DEFAULT_COLLECTION_NAME;
     }
-    this.settings = { ...settings };
+
+    return config as MongoDbStorageConfig
   }
 
   public async connect() {
-    this.client = await MongoClient.connect(this.settings.url, { useNewUrlParser: true })
+    this.client = await MongoClient.connect(this.config.url, { useNewUrlParser: true })
   }
 
   public async read(stateKeys: string[]): Promise<StoreItems> {
@@ -84,7 +101,7 @@ export class MongoDbStorage implements Storage {
   public async delete(keys: string[]): Promise<void> {
     if (!keys || keys.length == 0) {
       return;
-    }    
+    }
     await this.Collection.deleteMany({ _id: { $in: keys } });
   }
 
@@ -100,6 +117,6 @@ export class MongoDbStorage implements Storage {
   }
 
   get Collection(): Collection<MongoDocumentStoreItem> {
-    return this.client.db(this.settings.database).collection(this.settings.collection);
+    return this.client.db(this.config.database).collection(this.config.collection);
   }
 }

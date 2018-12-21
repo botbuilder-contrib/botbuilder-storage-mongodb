@@ -1,18 +1,25 @@
 import { Storage, StoreItems } from 'botbuilder';
 import { Collection } from 'mongodb';
-export interface MongoDbStorageSettings {
+export interface MongoDbStorageConfig {
     url: string;
-    database: string;
-    collection: string;
+    database?: string;
+    collection?: string;
+}
+export declare class MongoDbStorageError extends Error {
+    static readonly NO_CONFIG_ERROR: MongoDbStorageError;
+    static readonly NO_URL_ERROR: MongoDbStorageError;
 }
 interface MongoDocumentStoreItem {
     _id: string;
     state: any;
 }
 export declare class MongoDbStorage implements Storage {
-    private settings;
+    private config;
     private client;
-    constructor(settings: MongoDbStorageSettings);
+    static readonly DEFAULT_COLLECTION_NAME: string;
+    static readonly DEFAULT_DB_NAME: string;
+    constructor(config: MongoDbStorageConfig);
+    static ensureConfig(config: MongoDbStorageConfig): MongoDbStorageConfig;
     connect(): Promise<void>;
     read(stateKeys: string[]): Promise<StoreItems>;
     write(changes: StoreItems): Promise<void>;
