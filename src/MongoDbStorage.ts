@@ -1,5 +1,6 @@
 import { Storage, StoreItems } from 'botbuilder';
 import { MongoClient, Collection, ObjectID } from 'mongodb';
+import { connect } from 'tls';
 
 
 
@@ -54,10 +55,17 @@ export class MongoDbStorage implements Storage {
     this.client = await MongoClient.connect(this.config.url, { useNewUrlParser: true })
   }
 
+  public async ensureConnected(){
+    if(!this.client){
+      await this.connect();
+    }
+  }
   public async read(stateKeys: string[]): Promise<StoreItems> {
     if (!stateKeys || stateKeys.length == 0) {
       return {};
     }
+
+    await this.ensureConnected();
 
     const docs = await this.Collection.find({ _id: { $in: stateKeys } });
     const storeItems: StoreItems = (await docs.toArray()).reduce((accum, item) => {
@@ -73,6 +81,8 @@ export class MongoDbStorage implements Storage {
       return;
     }
 
+    await this.ensureConnected();
+    
     const operations = [];
 
     Object.keys(changes).forEach(key => {
@@ -102,6 +112,7 @@ export class MongoDbStorage implements Storage {
     if (!keys || keys.length == 0) {
       return;
     }
+    await this.ensureConnected();
     await this.Collection.deleteMany({ _id: { $in: keys } });
   }
 
