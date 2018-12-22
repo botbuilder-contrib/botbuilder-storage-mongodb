@@ -17,7 +17,6 @@ const mongoStorage = new MongoDbStorage({
   url: "mongodb://localhost:27017/",
   database: "botframework"
 });
-
 const conversationState = new ConversationState(mongoStorage);
 const userState = new UserState(mongoStorage);
 
