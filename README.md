@@ -21,12 +21,19 @@ const conversationState = new ConversationState(mongoStorage);
 * collection (optional): The name of the collection where the state documents will be stored. If omitted, the name "botframeworkstate" will be used.
 
 #### Unit Tests
+```npm run test```
 Unit tests are in pure javascript. The npm run test command executes tsc then invokes [nyc](https://github.com/istanbuljs/nyc)
 
-```npm run test```
 
 #### Code Coverage
-Invoke either coverage.bat or coverage.sh from a command line. This will create a coverage folder. Open the index.html file in a browser.
+```npm run cover```
+
+There is no need to execute 'npm run test' before code coverage. The cover command performs the following:
+
+* Build via the TypeScript compiler (tsc.)
+* Run run uni tests.
+* Create an html report in the cover folder.
+* Open a browser window with html report.
 
 
 

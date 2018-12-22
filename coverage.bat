@@ -1,1 +1,0 @@
-tsc && nyc mocha tests && nyc report --reporter html
