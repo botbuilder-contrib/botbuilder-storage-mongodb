@@ -18,10 +18,10 @@ Alternatively, you can use Docker. See the section below for instructions on how
   Change directory to the example folder
   ``` cd example```
 
-  #### Install Sample bot dependencies
+  Install Sample bot dependencies
   ``` npm install```
 
-  #### Starting the bot
+  Start the bot
   ``` node app```
 
 ### Running via Docker (will run a MongoDb container)
