@@ -33,9 +33,9 @@ Alternatively, you can use Docker. See the section below for instructions on how
   ``` File --> Open Bot Configuration```
   Select the bot file in this project.
 * Enter any text and notice the counter increments on the repsonse.
+* ![](readme_assets/sample_conversation.png)
 
 
-![](readme_assets/sample_conversation.png)
 
 * Start a mongo shell session and execute the following commands.
 
