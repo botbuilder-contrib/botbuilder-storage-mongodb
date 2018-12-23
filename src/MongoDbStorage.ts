@@ -24,7 +24,7 @@ interface MongoDocumentStoreItem {
 export class MongoDbStorage implements Storage {
   private config: any;
   private client: any;
-  static readonly DEFAULT_COLLECTION_NAME: string = "State";
+  static readonly DEFAULT_COLLECTION_NAME: string = "BotFrameworkState";
   static readonly DEFAULT_DB_NAME: string = "BotFramework";
 
   constructor(config: MongoDbStorageConfig) {
@@ -82,7 +82,7 @@ export class MongoDbStorage implements Storage {
     }
 
     await this.ensureConnected();
-    
+
     const operations = [];
 
     Object.keys(changes).forEach(key => {
