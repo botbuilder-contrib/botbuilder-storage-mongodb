@@ -1,22 +1,23 @@
 {
-    "name": "botbuilder-mongodb-storage",
-    "dependencies": {
-        "@types/mongodb": "^3.1.17",
-        "botbuilder": "^4.2.0",
-        "mongodb": "^3.1.10"
-    },
-    "scripts": {
-        "test": "tsc && nyc mocha tests",
-        "cover": "tsc && nyc mocha tests && nyc report --reporter html && start /max coverage/index.html",
-        "build": "tsc"
-    },
-    "devDependencies": {
-        "@types/mocha": "^5.2.5",
-        "@types/node": "^10.12.18",
-        "mocha": "^5.2.0",
-        "nyc": "^13.1.0",
-        "sinon": "^7.2.2",
-        "source-map-support": "^0.5.9",
-        "ts-node": "^7.0.1"
-    }
+  "name": "botbuilder-mongodb-storage",
+  "dependencies": {
+    "@types/mongodb": "^3.1.17",
+    "botbuilder": "^4.2.0",
+    "mongodb": "^3.1.10"
+  },
+  "scripts": {
+    "test": "npm run build && nyc mocha tests",
+    "cover": "npm run build && nyc mocha tests && nyc report --reporter html && start /max coverage/index.html",
+    "build": "node_modules/typescript/bin/tsc"
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.18",
+    "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
+    "sinon": "^7.2.2",
+    "source-map-support": "^0.5.9",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.2"
+  }
 }
