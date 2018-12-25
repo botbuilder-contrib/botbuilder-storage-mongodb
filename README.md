@@ -2,7 +2,7 @@
 
 ####  Build Badge (coming soon.)
 #### Installation (coming soon. Not yet on NPM registry)
-``` npm install botbuilder-mongo-storage```
+```npm install botbuilder-mongo-storage```
 
 
 ####  Sample Usage
