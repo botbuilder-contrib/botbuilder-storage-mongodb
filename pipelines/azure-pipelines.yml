@@ -1,0 +1,20 @@
+pr:
+- master
+
+queue:
+  name: Hosted Ubuntu 1604
+  demands: npm
+
+steps:
+- task: Npm@1
+  displayName: 'npm install'
+  inputs:
+    verbose: false
+
+
+- task: Npm@1
+  displayName: 'unit tests'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run test'
