@@ -11,10 +11,17 @@ steps:
   inputs:
     verbose: false
 
-
 - task: Npm@1
   displayName: 'unit tests'
   inputs:
     command: custom
     verbose: false
     customCommand: 'run test'
+    
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: MongoDbStorage'
+  inputs:
+    PathtoPublish: lib
+
+    ArtifactName: MongoDbStorage
+
