@@ -199,6 +199,43 @@ describe('MongoDbStorage ', function () {
     });
   });
 
+  describe('ensureConnected', async function () {
+    it('should call connect if client does not exist.', async function () {
+      //arrange
+      const storage = new MongoDbStorage({
+        url: 'fake_url',
+        database: 'fake_db'
+      });
+      sinon.stub(storage, "connect");
+
+      //act
+      await storage.ensureConnected();
+
+      //assert
+      assert(storage.connect.calledOnce);
+
+      //cleanup
+      storage.connect.restore();
+    });
+    it('should not call connect if client exists.', async function () {
+      //arrange
+      const storage = new MongoDbStorage({
+        url: 'fake_url',
+        database: 'fake_db'
+      });
+      sinon.stub(storage, "connect");
+
+      //act
+      storage.client = "fake_client";
+      await storage.ensureConnected();
+
+      //assert
+      assert(!storage.connect.calledOnce);
+
+      //cleanup
+      storage.connect.restore();
+    });
+  });
   describe('read', async function (done) {
     it('should call Collection.find with query that includes keys that are passed in', async function () {
       //arrange

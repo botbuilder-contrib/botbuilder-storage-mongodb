@@ -21,6 +21,7 @@ export declare class MongoDbStorage implements Storage {
     constructor(config: MongoDbStorageConfig);
     static ensureConfig(config: MongoDbStorageConfig): MongoDbStorageConfig;
     connect(): Promise<void>;
+    ensureConnected(): Promise<void>;
     read(stateKeys: string[]): Promise<StoreItems>;
     write(changes: StoreItems): Promise<void>;
     delete(keys: string[]): Promise<void>;
