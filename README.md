@@ -1,9 +1,16 @@
-## MongoDb Storage for Bot Framework.
+## MongoDb Storage for Bot Framework
+
+This project provides a MongoDb storage mechanism for [Bot Framework-JS SDK V4.](https://github.com/Microsoft/botbuilder-js)
 
 ![Build Status](https://dev.azure.com/BotBuilderPackages/mongoDBStorage/_apis/build/status/Pull%20Request%20Build?branchName=master)
 #### Installation (coming soon. Not yet on NPM registry)
 ```npm install botbuilder-mongo-storage```
 
+### Requirements
+* BotFramework SDK 4.0 
+* [NodeJS](https://nodejs.org/en/) 10.x is a requirement to install dependencies, build and run tests.
+
+Note: You do not need typescript installed globally, the project installs the typescript compiler locally and uses it in the build process.
 
 ####  Sample Usage
 ```JavaScript
