@@ -34,5 +34,6 @@ export declare class MongoDbStorage implements Storage {
         'state.eTag': any;
     };
     readonly Collection: Collection<MongoDocumentStoreItem>;
+    close(): Promise<void>;
 }
 export {};

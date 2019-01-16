@@ -23,7 +23,7 @@ interface MongoDocumentStoreItem {
 
 export class MongoDbStorage implements Storage {
   private config: any;
-  private client: any;
+  private client: MongoClient;
   static readonly DEFAULT_COLLECTION_NAME: string = "BotFrameworkState";
   static readonly DEFAULT_DB_NAME: string = "BotFramework";
 
@@ -55,8 +55,8 @@ export class MongoDbStorage implements Storage {
     this.client = await MongoClient.connect(this.config.url, { useNewUrlParser: true })
   }
 
-  public async ensureConnected(){
-    if(!this.client){
+  public async ensureConnected() {
+    if (!this.client) {
       await this.connect();
     }
   }
@@ -129,5 +129,11 @@ export class MongoDbStorage implements Storage {
 
   get Collection(): Collection<MongoDocumentStoreItem> {
     return this.client.db(this.config.database).collection(this.config.collection);
+  }
+
+  public async close() {
+    if (this.client) {
+      await this.client.close();
+    }
   }
 }

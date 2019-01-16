@@ -3,7 +3,7 @@ const {
   MongoDbStorage,
   MongoDbStorageError,
   MongoDbStorageConfig
-} = require('../lib/MongoDbStorage');
+} = require('../../lib/MongoDbStorage');
 const sinon = require('sinon');
 
 //require MongoClient to set up fakes and stubs, not actual database connectivity
