@@ -51,15 +51,18 @@ export class MongoDbStorage implements Storage {
     return config as MongoDbStorageConfig
   }
 
-  public async connect() {
-    this.client = await MongoClient.connect(this.config.url, { useNewUrlParser: true })
+  public async connect(): Promise<MongoClient> {
+    this.client = await MongoClient.connect(this.config.url, { useNewUrlParser: true });
+    return this.client;
   }
 
-  public async ensureConnected() {
+  public async ensureConnected(): Promise<MongoClient> {
     if (!this.client) {
       await this.connect();
     }
+    return this.client;
   }
+
   public async read(stateKeys: string[]): Promise<StoreItems> {
     if (!stateKeys || stateKeys.length == 0) {
       return {};
@@ -134,6 +137,7 @@ export class MongoDbStorage implements Storage {
   public async close() {
     if (this.client) {
       await this.client.close();
+      delete this.client;
     }
   }
 }

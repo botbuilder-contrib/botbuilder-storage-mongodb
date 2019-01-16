@@ -2,16 +2,18 @@
   "name": "botbuilder-storage-mongodb",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hattan/botbuilder-storage-mongodb.git"
+    "url": "https://github.com/botbuilder-contrib/botbuilder-storage-mongodb.git"
   },
   "dependencies": {
     "@types/mongodb": "^3.1.19",
     "botbuilder": "^4.2.0",
-    "mongodb": "^3.1.11"
+    "mongodb": "^3.1.11",
+    "request": "^2.88.0"
   },
   "scripts": {
-    "test": "npm run build && nyc mocha tests",
-    "cover": "npm run build && nyc mocha tests && nyc report --reporter html && start /max coverage/index.html",
+    "test:unit": "npm run build && nyc mocha test/unit",
+    "test:integration": "npm run build && nyc mocha test/integration",
+    "cover": "npm run build && nyc mocha test && nyc report --reporter html && start /max coverage/index.html",
     "build": "node node_modules/typescript/bin/tsc"
   },
   "devDependencies": {
