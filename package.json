@@ -10,10 +10,9 @@
     "mongodb": "^3.1.11"
   },
   "scripts": {
-    "test": "npm run build && nyc mocha test/unit",
-    "test_integration": "npm run build && nyc mocha test/integration",
-    "cover": "npm run build && nyc mocha test/unit && nyc report --reporter html && start /max coverage/index.html",
-    "build": "node node_modules/typescript/lib/tsc --build"
+    "test": "npm run build && nyc mocha tests",
+    "cover": "npm run build && nyc mocha tests && nyc report --reporter html && start /max coverage/index.html",
+    "build": "node node_modules/typescript/bin/tsc"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.5",
