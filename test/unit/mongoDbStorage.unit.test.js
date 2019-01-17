@@ -3,7 +3,7 @@ const {
   MongoDbStorage,
   MongoDbStorageError,
   MongoDbStorageConfig
-} = require('../lib/MongoDbStorage');
+} = require('../../lib/MongoDbStorage');
 const sinon = require('sinon');
 
 //require MongoClient to set up fakes and stubs, not actual database connectivity
@@ -625,4 +625,31 @@ describe('MongoDbStorage ', function () {
     });
   });
 
+  describe('close', function () {
+    it('Closes existing client', async function () {
+      var target = new MongoDbStorage(getSettings());
+      let subject = {
+
+        isClosed: false,
+        close: function () {
+          this.isClosed = true;
+        }
+      }
+      target.client = subject;
+
+      target.close();
+
+      assert.ok(subject.isClosed);
+    })
+
+    it('Skips closing if no client', async function () {
+      var target = new MongoDbStorage(getSettings());
+
+      target.client = null;
+
+      target.close();
+
+      assert.ok(!target.client);
+    })
+  })
 });

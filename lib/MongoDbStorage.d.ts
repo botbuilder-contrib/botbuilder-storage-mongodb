@@ -1,5 +1,5 @@
 import { Storage, StoreItems } from 'botbuilder';
-import { Collection } from 'mongodb';
+import { MongoClient, Collection } from 'mongodb';
 export interface MongoDbStorageConfig {
     url: string;
     database?: string;
@@ -20,8 +20,8 @@ export declare class MongoDbStorage implements Storage {
     static readonly DEFAULT_DB_NAME: string;
     constructor(config: MongoDbStorageConfig);
     static ensureConfig(config: MongoDbStorageConfig): MongoDbStorageConfig;
-    connect(): Promise<void>;
-    ensureConnected(): Promise<void>;
+    connect(): Promise<MongoClient>;
+    ensureConnected(): Promise<MongoClient>;
     read(stateKeys: string[]): Promise<StoreItems>;
     write(changes: StoreItems): Promise<void>;
     delete(keys: string[]): Promise<void>;
@@ -34,5 +34,6 @@ export declare class MongoDbStorage implements Storage {
         'state.eTag': any;
     };
     readonly Collection: Collection<MongoDocumentStoreItem>;
+    close(): Promise<void>;
 }
 export {};
