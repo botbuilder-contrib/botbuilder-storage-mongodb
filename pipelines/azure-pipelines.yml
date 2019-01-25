@@ -1,4 +1,3 @@
-pr:
 - master
 
 queue:
@@ -16,12 +15,28 @@ steps:
   inputs:
     command: custom
     verbose: false
-    customCommand: 'run test'
-    
+    customCommand: 'run test:unit'
+
+- task: Docker@1
+  displayName: 'Run MongoDB on Docker'
+  inputs:
+    containerregistrytype: 'Container Registry'
+    command: 'Run an image'
+    imageName: 'mongo:4.0'
+    qualifyImageName: false
+    containerName: 'mongo_4_0'
+    ports: '27017:27017'
+    memoryLimit: 1GB
+
+- task: Npm@1
+  displayName: 'integration tests'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run test:integration'
+
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: MongoDbStorage'
   inputs:
     PathtoPublish: lib
-
     ArtifactName: MongoDbStorage
-
