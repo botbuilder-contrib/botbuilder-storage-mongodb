@@ -1,3 +1,4 @@
+pr:
 - master
 
 queue:
@@ -10,6 +11,7 @@ steps:
   inputs:
     verbose: false
 
+# Unit tests only
 - task: Npm@1
   displayName: 'unit tests'
   inputs:
@@ -17,6 +19,7 @@ steps:
     verbose: false
     customCommand: 'run test:unit'
 
+# Stand a dockerized MongoDB instance
 - task: Docker@1
   displayName: 'Run MongoDB on Docker'
   inputs:
@@ -28,6 +31,7 @@ steps:
     ports: '27017:27017'
     memoryLimit: 1GB
 
+# Integration tests only
 - task: Npm@1
   displayName: 'integration tests'
   inputs:
@@ -35,6 +39,7 @@ steps:
     verbose: false
     customCommand: 'run test:integration'
 
+# Publish
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: MongoDbStorage'
   inputs:
