@@ -2,7 +2,7 @@
 
 This project provides a MongoDb storage mechanism for [Bot Framework-JS SDK V4.](https://github.com/Microsoft/botbuilder-js)
 
-![Build Status](https://dev.azure.com/BotBuilderPackages/mongoDBStorage/_apis/build/status/Pull%20Request%20Build?branchName=master)
+![Build Status][![Build Status](https://dev.azure.com/BotBuilderPackages/mongoDBStorage/_apis/build/status/MongoDbStorage%20Build?branchName=master)](https://dev.azure.com/BotBuilderPackages/mongoDBStorage/_build/latest?definitionId=2&branchName=master)
 #### Installation (coming soon. Not yet on NPM registry)
 ```npm install botbuilder-mongo-storage```
 
