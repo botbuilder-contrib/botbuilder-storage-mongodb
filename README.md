@@ -41,6 +41,6 @@ See [example code](example/app.js) for more details.
 |`database`| The name of the database where state will be stored | _Optional_. Default `"BotFramework"`|
 |`collection` | The name of the collection where the state documents will be stored.| _Optional_. Default `"BotFrameworkState"` |
 
-> Security Note: you **should not store Mongo URL in code!**. Rather, get the url from a configuration such as environment variable or a secrets store in your environment. It may contain sensitive password in the clear and should __never be stored in code__!
+> &#X26A0; Caution: you **should not store Mongo URL in code!** Get the `url` from a configuration such as environment variable or a secrets store in your environment. It may contain sensitive password in the clear and should __never be stored in code__!
 
 See [MongoDB Connection URI format](https://docs.mongodb.com/manual/reference/connection-string/) in the official documentation to learn more about the connection `url` parameter value.
