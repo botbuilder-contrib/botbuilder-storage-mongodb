@@ -15,6 +15,8 @@ Contributing to this project can be done through pull requests or raising issues
 
 ## Local Development Setup
 
+### Project setup
+
 Pull the code from the repo:
 
 ```bash
@@ -27,11 +29,32 @@ Install packages
 npm install
 ```
 
+> Note: You do not need TypeScript installed globally. The project installs the TypeScript compiler locally and uses it in the build process.
+
+### Unit Test
+
 Run all unit tests
 
 ```bash
 npm run test:unit
 ```
+
+Unit tests are written in pure JavaScript. The npm `test:unit` script  executes `tsc` then invokes [`nyc`](https://github.com/istanbuljs/nyc)
+
+### Code Coverage
+
+```bash
+npm run cover
+```
+
+There is no need to execute 'npm run test:unit' before code coverage. The cover command performs the following:
+
+* Builds via the TypeScript compiler (`tsc`).
+* Runs run unit tests.
+* Creates an html report in the cover folder.
+* Opens a browser window with html report.
+
+### Integration Testing
 
 Run a local MongoDB instance in order to perform integration tests.
 There are many ways to run MongoDB locally, and you may already be running Mongo on your computer. 
@@ -58,8 +81,6 @@ If your computer is already running a MongoDB server instance, you would need to
 
 > Please don't modify the `settings` object in the integration tests. Our automated builds will fail and cause your PR to be rejected.
 
-
-
 Once you have MongoDB running, ensure all integration tests pass:
 
 ```bash
@@ -70,4 +91,4 @@ npm run test:integration
 
 [TBD]
 
-Use the [TBD] template and ensure the PR complies with all requested information. 
+Use the [TBD] template and ensure the PR complies with all requested information.
