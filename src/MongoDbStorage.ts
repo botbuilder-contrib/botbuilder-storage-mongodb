@@ -1,5 +1,6 @@
 import { Storage, StoreItems } from 'botbuilder';
 import { MongoClient, Collection, ObjectID } from 'mongodb';
+import { CosmosDbKeyEscape } from 'botbuilder-azure';
 import { connect } from 'tls';
 
 
@@ -68,9 +69,13 @@ export class MongoDbStorage implements Storage {
       return {};
     }
 
+    const keys = stateKeys.map((key) => {
+      return CosmosDbKeyEscape.escapeKey(key);
+    });
+
     await this.ensureConnected();
 
-    const docs = await this.Collection.find({ _id: { $in: stateKeys } });
+    const docs = await this.Collection.find({ _id: { $in: keys } });
     const storeItems: StoreItems = (await docs.toArray()).reduce((accum, item) => {
       accum[item._id] = item.state;
       return accum;
@@ -89,13 +94,15 @@ export class MongoDbStorage implements Storage {
     const operations = [];
 
     Object.keys(changes).forEach(key => {
+      const escapeKey = CosmosDbKeyEscape.escapeKey(key);
       const state = changes[key];
+      state._id = escapeKey;
       const shouldSlam = MongoDbStorage.shouldSlam(state.eTag);
       const oldETag = state.eTag;
       state.eTag = new ObjectID().toHexString();
       operations.push({
         updateOne: {
-          filter: MongoDbStorage.createFilter(key, oldETag),
+          filter: MongoDbStorage.createFilter(escapeKey, oldETag),
           update: {
             $set: {
               state: state,
@@ -111,10 +118,15 @@ export class MongoDbStorage implements Storage {
     //TODO: process bulk results: if 0 modified, 0 upserted then throw exception because state was not mutated.
   }
 
-  public async delete(keys: string[]): Promise<void> {
-    if (!keys || keys.length == 0) {
+  public async delete(stateKeys: string[]): Promise<void> {
+    if (!stateKeys || stateKeys.length == 0) {
       return;
     }
+
+    const keys = stateKeys.map((key) => {
+      return CosmosDbKeyEscape.escapeKey(key);
+    });
+
     await this.ensureConnected();
     await this.Collection.deleteMany({ _id: { $in: keys } });
   }
