@@ -53,6 +53,13 @@ steps:
     Contents: 'package.json'
     TargetFolder: 'package'
 
+# Copy index.js into lib
+- task: CopyFiles@2
+  displayName: 'Copy readme.md to lib'
+  inputs:
+    Contents: 'index.js'
+    TargetFolder: 'package'
+
 # Copy readme.md into lib
 - task: CopyFiles@2
   displayName: 'Copy readme.md to lib'
