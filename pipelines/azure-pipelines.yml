@@ -53,6 +53,13 @@ steps:
     Contents: 'package.json'
     TargetFolder: 'package'
 
+# Copy readme.md into lib
+- task: CopyFiles@2
+  displayName: 'Copy readme.md to lib'
+  inputs:
+    Contents: 'readme.md'
+    TargetFolder: 'package'
+
 # Publish
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: MongoDbStorage'
