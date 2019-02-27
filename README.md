@@ -13,8 +13,6 @@ It allows you to store bot state in MongoDB, so that you can scale out your bot,
 
 ## Installation
 
-> (coming soon. Not yet on NPM registry)
-
 ```bash
 npm install botbuilder-storage-mongodb
 ```
