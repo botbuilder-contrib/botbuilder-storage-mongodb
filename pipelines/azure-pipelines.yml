@@ -44,7 +44,7 @@ steps:
   displayName: 'Copy package.json to lib'
   inputs:
     contents: 'lib/**'
-    targetFolder: 'package/lib'
+    targetFolder: 'package'
 
 # Copy package.json into lib
 - task: CopyFiles@2
