@@ -65,14 +65,7 @@ steps:
     contents: 'lib/**'
     targetFolder: 'package'
 
-# Copy package.json into lib
-- task: CopyFiles@2
-  displayName: 'Copy package.json to lib'
-  inputs:
-    Contents: 'package.json'
-    TargetFolder: 'package'
-
-# Copy documents into lib
+# Copy documents, index.js and package.json into lib
 - task: CopyFiles@2
   displayName: 'Copy documents into lib'
   inputs:
@@ -81,7 +74,9 @@ steps:
       Contributing.md
       LICENSE
       README.md
-    TargetFolder: 'package'
+      index.js
+      package.json
+    TargetFolder: 'package'    
 
 # Publish
 - task: PublishBuildArtifacts@1
