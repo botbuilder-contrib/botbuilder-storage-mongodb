@@ -54,7 +54,7 @@ steps:
     TargetFolder: 'package'
 
 # Copy readme.md into lib
-- task: CopyFiles@3
+- task: CopyFiles@2
   displayName: 'Copy readme.md to lib'
   inputs:
     Contents: 'README.md'
