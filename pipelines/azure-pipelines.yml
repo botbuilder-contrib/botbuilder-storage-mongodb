@@ -39,9 +39,26 @@ steps:
     verbose: false
     customCommand: 'run test:integration'
 
+ # Copy package.json into lib
+- task: CopyFiles@1
+  displayName: 'Copy package.json to lib'
+  inputs:
+    contents: 'lib/**'
+    targetFolder: 'package/lib'
+
+# Copy package.json into lib
+- task: CopyFiles@2
+  displayName: 'Copy package.json to lib'
+  inputs:
+    Contents: 'package.json'
+    TargetFolder: 'package'
+
 # Publish
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: MongoDbStorage'
   inputs:
-    PathtoPublish: lib
-    ArtifactName: MongoDbStorage
+    PathtoPublish: package
+    ArtifactName: MongoDbStoragePackage
+
+
+
