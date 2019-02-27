@@ -2,7 +2,6 @@
   "name": "botbuilder-storage-mongodb",
   "version": "0.9.3",
   "license": "MIT",
-  "main": "lib/MongoDbStorage.js",
   "contributors": [
     {
       "name": "Hattan Shobokshi",
