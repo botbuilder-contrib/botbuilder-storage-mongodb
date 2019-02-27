@@ -6,10 +6,29 @@ queue:
   demands: npm
 
 steps:
+
+# Add npm
 - task: Npm@1
   displayName: 'npm install'
   inputs:
     verbose: false
+
+# Ensure version was bumped
+- task: PowerShell@2
+  displayName: 'Package Version Bump Check'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  inputs:
+    failOnStderr: true
+    targetType: inline
+    script: |
+      Write-Host "Checking published NPM version vs. the code package.json::version"
+      $publishedVersion = npm show botbuilder-storage-mongodb version
+      $thisVersion = node -e "console.log(require('./package.json').version)"
+      Write-Host $publishedVersion '  vs. '  $thisVersion
+      if ($publishedVersion -eq $thisVersion) { 
+         $message =  "Version $thisVersion is the same as published version $publishedVersion on NPM. Please bump source version in package.json."   
+         write-error $message
+      }
 
 # Unit tests only
 - task: Npm@1
