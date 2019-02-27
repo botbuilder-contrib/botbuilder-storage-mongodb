@@ -1,6 +1,6 @@
 {
   "name": "botbuilder-storage-mongodb",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "license": "MIT",
   "contributors": [
     {
@@ -24,6 +24,7 @@
   "files": [
     "lib/**/*.*"
   ],
+
   "dependencies": {
     "@types/mongodb": "^3.1.19",
     "botbuilder": "^4.2.0",
