@@ -6,14 +6,19 @@ import { connect } from 'tls';
 
 
 export interface MongoDbStorageConfig {
-  url: string;
+  client?: MongoClient;
+  url?: string;
   database?: string;
   collection?: string;
 }
 
 export class MongoDbStorageError extends Error {
-  public static readonly NO_CONFIG_ERROR: MongoDbStorageError = new MongoDbStorageError('MongoDbStorageConfig is required.');
-  public static readonly NO_URL_ERROR: MongoDbStorageError = new MongoDbStorageError('MongoDbStorageConfig.url is required.');
+  public static readonly NO_CONFIG_ERROR: MongoDbStorageError = new MongoDbStorageError(
+    'MongoDbStorageConfig is required.'
+  );
+  public static readonly NO_CLIENT_AND_URL_ERROR: MongoDbStorageError = new MongoDbStorageError(
+    'MongoDbStorageConfig.client or MongoDbStorageConfig.client is required.'
+  );
 }
 
 interface MongoDocumentStoreItem {
@@ -22,13 +27,17 @@ interface MongoDocumentStoreItem {
 }
 
 export class MongoDbStorage implements Storage {
-  private config: any;
+  private config: MongoDbStorageConfig;
   private client: MongoClient;
   static readonly DEFAULT_COLLECTION_NAME: string = "BotFrameworkState";
   static readonly DEFAULT_DB_NAME: string = "BotFramework";
 
   constructor(config: MongoDbStorageConfig) {
     this.config = MongoDbStorage.ensureConfig({ ...config });
+
+    if (this.config.client) {
+      this.client = this.config.client;
+    }
   }
 
   public static ensureConfig(config: MongoDbStorageConfig): MongoDbStorageConfig {
@@ -36,8 +45,11 @@ export class MongoDbStorage implements Storage {
       throw MongoDbStorageError.NO_CONFIG_ERROR;
     }
 
-    if (!config.url || config.url.trim() === '') {
-      throw MongoDbStorageError.NO_URL_ERROR;
+    const client = config.client;
+    const url = config.url && config.url.trim();
+
+    if (!client && !url) {
+      throw MongoDbStorageError.NO_CLIENT_AND_URL_ERROR;
     }
 
     if (!config.database || config.database.trim() == '') {
