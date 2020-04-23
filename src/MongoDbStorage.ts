@@ -1,5 +1,5 @@
 import { Storage, StoreItems } from 'botbuilder';
-import { MongoClient, Collection, ObjectID } from 'mongodb';
+import { MongoClient, Collection, ObjectID, MongoClientOptions } from 'mongodb';
 import { connect } from 'tls';
 
 
@@ -9,6 +9,7 @@ export interface MongoDbStorageConfig {
   url: string;
   database?: string;
   collection?: string;
+  options?: MongoClientOptions;
 }
 
 export class MongoDbStorageError extends Error {
@@ -22,10 +23,14 @@ interface MongoDocumentStoreItem {
 }
 
 export class MongoDbStorage implements Storage {
-  private config: any;
+  private config: MongoDbStorageConfig;
   private client: MongoClient;
   static readonly DEFAULT_COLLECTION_NAME: string = "BotFrameworkState";
   static readonly DEFAULT_DB_NAME: string = "BotFramework";
+  static readonly DEFAULT_OPTIONS: MongoClientOptions = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  } as MongoClientOptions
 
   constructor(config: MongoDbStorageConfig) {
     this.config = MongoDbStorage.ensureConfig({ ...config });
@@ -48,11 +53,15 @@ export class MongoDbStorage implements Storage {
       config.collection = MongoDbStorage.DEFAULT_COLLECTION_NAME;
     }
 
+    if (!config.options) {
+      config.options = MongoDbStorage.DEFAULT_OPTIONS;
+    }
+
     return config as MongoDbStorageConfig
   }
 
   public async connect(): Promise<MongoClient> {
-    this.client = await MongoClient.connect(this.config.url, { useNewUrlParser: true });
+    this.client = await MongoClient.connect(this.config.url, this.config.options);
     return this.client;
   }
 
