@@ -1,9 +1,7 @@
 const assert = require('assert');
-const {
-  MongoDbStorage,
-  MongoDbStorageError,
-  MongoDbStorageConfig
-} = require('../../lib/MongoDbStorage');
+const { MongoDbStorage } = require('../../lib/MongoDbStorage');
+const { MongoDbStorageError } = require('../../lib/MongoDbStorageError');
+
 const sinon = require('sinon');
 
 //require MongoClient to set up fakes and stubs, not actual database connectivity
@@ -140,8 +138,14 @@ describe('MongoDbStorage ', function () {
       assert.equal(actual.collection, expected, 'Expected default collection name');
     });
 
-  });
+    it('should use default MongoClientOptions', function () {
+      const expected = MongoDbStorage.DEFAULT_CLIENT_OPTIONS;
+      const actual = MongoDbStorage.ensureConfig({ url: 'u' });
+      assert.equal(actual.clientOptions, expected);
+    });
 
+  });
+  
   describe('connect', async function () {
     it('should call MongoClient.connect.', async function () {
       //arrange
@@ -286,19 +290,19 @@ describe('MongoDbStorage ', function () {
           return {
             toArray: function () {
               return [{
-                  _id: 'abc',
-                  state: 'some_state'
-                },
-                {
-                  _id: '123',
-                  state: {
-                    foo: 'bar'
-                  }
-                },
-                {
-                  _id: '456',
-                  state: 1234
+                _id: 'abc',
+                state: 'some_state'
+              },
+              {
+                _id: '123',
+                state: {
+                  foo: 'bar'
                 }
+              },
+              {
+                _id: '456',
+                state: 1234
+              }
               ];
             }
           };
@@ -374,19 +378,19 @@ describe('MongoDbStorage ', function () {
           return {
             toArray: function () {
               return [{
-                  _id: 'abc',
-                  state: 'some_state'
-                },
-                {
-                  _id: '123',
-                  state: {
-                    foo: 'bar'
-                  }
-                },
-                {
-                  _id: '456',
-                  state: 1234
+                _id: 'abc',
+                state: 'some_state'
+              },
+              {
+                _id: '123',
+                state: {
+                  foo: 'bar'
                 }
+              },
+              {
+                _id: '456',
+                state: 1234
+              }
               ];
             }
           };
@@ -586,7 +590,7 @@ describe('MongoDbStorage ', function () {
         db: function (d) {
           database = d;
           return {
-            collection: function () {}
+            collection: function () { }
           }
         }
       };
