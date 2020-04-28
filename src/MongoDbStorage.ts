@@ -1,25 +1,8 @@
 import { Storage, StoreItems } from 'botbuilder';
 import { MongoClient, Collection, ObjectID, MongoClientOptions } from 'mongodb';
-
-
-
-
-export interface MongoDbStorageConfig {
-  url: string;
-  database?: string;
-  collection?: string;
-  clientOptions?: MongoClientOptions;
-}
-
-export class MongoDbStorageError extends Error {
-  public static readonly NO_CONFIG_ERROR: MongoDbStorageError = new MongoDbStorageError('MongoDbStorageConfig is required.');
-  public static readonly NO_URL_ERROR: MongoDbStorageError = new MongoDbStorageError('MongoDbStorageConfig.url is required.');
-}
-
-interface MongoDocumentStoreItem {
-  _id: string;
-  state: any;
-}
+import { MongoDbStorageConfig } from './MongoDbStorageConfig';
+import { MongoDbStorageError } from './MongoDbStorageError';
+import { MongoDocumentStoreItem } from './MongoDocumentStoreItem';
 
 export class MongoDbStorage implements Storage {
   private config: MongoDbStorageConfig;
