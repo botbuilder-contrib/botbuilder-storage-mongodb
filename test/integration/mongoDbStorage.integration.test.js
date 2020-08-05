@@ -7,7 +7,7 @@
 
  //require MongoClient to set up fakes and stubs, not actual database connectivity
  const {
-   ObjectID
+   ObjectID, MongoClient
  } = require('mongodb');
 
  const settings = {
@@ -18,18 +18,18 @@
 
  describe('mongoDbStorage integration tests', function () {
    let storage;
-
+   let client;
 
    beforeEach(async function () {
-     storage = new MongoDbStorage(settings);
-     await storage.ensureConnected();
+     client = new MongoClient(settings.url, { useNewUrlParser: true });
+     await client.connect();
+     const collection = client.db(settings.database).collection(settings.collection);
+     storage = new MongoDbStorage(collection);     
    });
 
    afterEach(async function () {
-     await storage.close();
+     await client.close();
    })
-
-
 
    function uniqueChange() {
      return {
@@ -53,7 +53,7 @@
        const subject = uniqueChange();
        await storage.write(subject);
 
-       const actual = await storage.Collection.findOne({
+       const actual = await storage.targetCollection.findOne({
          _id: idOf(subject)
        });
 
@@ -94,7 +94,7 @@
 
        await storage.delete([testId]);
 
-       const actual = await storage.Collection.findOne({
+       const actual = await storage.targetCollection.findOne({
          _id: testId
        });
 

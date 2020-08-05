@@ -3,6 +3,7 @@
 const { BotFrameworkAdapter, ActivityTypes, ConversationState, UserState } = require('botbuilder');
 const { MongoDbStorage } = require('../lib/MongoDbStorage');
 const BotGreeting = require('botbuilder-greeting');
+const { MongoClient } = require('mongodb');
 
 let server = require('restify').createServer();
 
@@ -20,19 +21,35 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
     * url - (required) url of the mongodb server.
     * database - (optional) name of the database where the collection will live, If omitted "botframework" will be used as a default.
     * collection - (optional) name of the collection to store the data. If omitted "botframeworkstate" will be used as a default.*/
-const mongoStorage = new MongoDbStorage({
-  url: "mongodb://localhost:27017/",
-  database: "BotFramework"
-});
-const conversationState = new ConversationState(mongoStorage);
-const userState = new UserState(mongoStorage);
 
-// Create a Conversation State Property
-let conversationProperty = conversationState.createProperty("Convo");
+
+let conversationState;
+let userState;
+
+let conversationProperty;
 
 //Create User State properties
-let countProperty = userState.createProperty("CountProperty");
-let nameProperty = userState.createProperty("nameP");
+let countProperty;
+let nameProperty;
+
+(async () => {
+  const mongoClient = new MongoClient("mongodb://localhost:27017/", { useUnifiedTopology: true });
+  await mongoClient.connect();
+  const collection = MongoDbStorage.getCollection(mongoClient);
+  const mongoStorage = new MongoDbStorage(collection);
+
+
+  conversationState = new ConversationState(mongoStorage);
+  userState = new UserState(mongoStorage);
+
+  //  Conversation State Property
+  conversationProperty = conversationState.createProperty("Convo");
+
+  // User State properties
+  countProperty = userState.createProperty("CountProperty");
+  nameProperty = userState.createProperty("nameP");
+
+})();
 
 server.post('/api/messages', async (req, res) => {
   adapter.processActivity(req, res, async context => {
@@ -40,7 +57,7 @@ server.post('/api/messages', async (req, res) => {
       //Get all storage items
       let conversation = await conversationProperty.get(context, {});
       let count = await countProperty.get(context, 0);
-      let name = await nameProperty.get(context,"");
+      let name = await nameProperty.get(context, "");
 
       // Change the data in some way
       count++;
