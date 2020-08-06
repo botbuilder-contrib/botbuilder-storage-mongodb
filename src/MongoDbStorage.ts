@@ -66,8 +66,10 @@ export class MongoDbStorage implements Storage {
           filter: MongoDbStorage.createFilter(key, oldETag),
           update: {
             $set: {
-              state: state,
-              dt: new Date()
+              state: state
+            },
+            $currentDate: {
+              dt: { $type: 'date' }
             }
           },
           upsert: shouldSlam
@@ -89,7 +91,7 @@ export class MongoDbStorage implements Storage {
     return { _id: key, 'state.eTag': etag };
   }
 
-  public static getCollection(client: MongoClient, dbName: string, collectionName: string): Collection<MongoDocumentStoreItem> {
-    return client.db(dbName || MongoDbStorage.DEFAULT_DB_NAME).collection(collectionName || MongoDbStorage.DEFAULT_COLLECTION_NAME)
+  public static getCollection(client: MongoClient, dbName: string = MongoDbStorage.DEFAULT_DB_NAME, collectionName: string = MongoDbStorage.DEFAULT_COLLECTION_NAME): Collection<MongoDocumentStoreItem> {
+    return client.db(dbName).collection(collectionName)
   }
 }

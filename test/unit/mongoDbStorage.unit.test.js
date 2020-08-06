@@ -249,7 +249,7 @@ describe('MongoDbStorage ', function () {
       assert.ok(actual[0].updateOne.upsert == false);
     });
 
-    it('creates $set property with correct state update values', async function () {
+    it('creates $set property with item value', async function () {
       //arrange
       const changes = {
         'key_one': {
@@ -262,7 +262,23 @@ describe('MongoDbStorage ', function () {
       const actual = MongoDbStorage.createBulkOperations(changes);
 
       //assert
-      assert.deepEqual(actual[0].updateOne.update.$set.state.item, "foo");
+      assert.deepEqual(actual[0].updateOne.update.$set.state.item, changes.key_one.item);
+    });
+   
+    it('updates dt field to current date', async function () {
+      //arrange
+      const changes = {
+        'key_one': {
+          item: "foo",
+          eTag: "*"
+        }
+      };
+
+      //act
+      const actual = MongoDbStorage.createBulkOperations(changes);
+
+      //assert
+      assert.deepStrictEqual(actual[0].updateOne.update.$currentDate, {dt: {$type: 'date'}});
     });
   });
 
@@ -284,5 +300,33 @@ describe('MongoDbStorage ', function () {
       });
     });
   });
+
+  describe('getCollection', function(){
+    it('uses default DB and Collection names', function(){
+      //arrange
+      collectionFake = sinon.fake();
+      dbFake = sinon.fake.returns({collection: collectionFake});
+      
+      //act
+      MongoDbStorage.getCollection({db: dbFake});
+      
+      //assert
+      assert.ok(dbFake.calledWith(MongoDbStorage.DEFAULT_DB_NAME));
+      assert.ok(collectionFake.calledWith(MongoDbStorage.DEFAULT_COLLECTION_NAME));
+    })
+
+    it('overrides default DB and Collection names when supplied', function(){
+      //arrange
+      collectionFake = sinon.fake();
+      dbFake = sinon.fake.returns({collection: collectionFake});
+      
+      //act
+      MongoDbStorage.getCollection({db: dbFake},dbName='db1', collectionName = 'collection1');
+      
+      //assert
+      assert.ok(dbFake.calledWith('db1'));
+      assert.ok(collectionFake.calledWith('collection1'));
+    })
+  })
 
 });
