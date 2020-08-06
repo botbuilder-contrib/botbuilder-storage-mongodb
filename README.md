@@ -56,3 +56,19 @@ You can also skip using the convenience method and supply a [`Collection`](https
 > &#X26A0; Caution: you **should not store Mongo URL in code!** Get the `url` from a configuration such as environment variable or a secrets store in your environment. It may contain sensitive password in the clear and should __never be stored in code__!
 
 See [MongoDB Connection URI format](https://docs.mongodb.com/manual/reference/connection-string/) in the official documentation to learn more about the connection `url` parameter value.
+
+
+## Stale State
+
+Persisted state is stored indefinitely by Mongo, as the BotFramework on its own does not clean up persisted state.
+
+You can leverage MongoDB's [TTL index](https://docs.mongodb.com/manual/core/index-ttl/) to automatically delete state records a certain time after their creation. The field `dt` on the state items is updated each time a state is saved. It is therefore a good candidate for _expire-after-x_ type cleanup.
+
+Using the MongoDB Shell, the commands below creates a TTL index on the `dt` field, causing MongoDB compliant engines to automatically delete documents older than 30 days:
+
+```javascript
+
+  use BotFramework
+   db.BotFrameworkState.createIndex({dt: 1}, {expireAfterSeconds: (60 * 60 * 24 * 30)});
+
+```
