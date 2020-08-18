@@ -33,5 +33,11 @@ jobs:
     - name: Build
       run: npm build
 
-    - name: Test
+    - name: Unit Test
       run: npm run test:unit
+
+    - name: MongoDB container
+      run: docker run --name MongoDB -d -p 27017:27017 mongo:4.2
+    
+    - name: Integration tests
+      run: npm run test:integration
