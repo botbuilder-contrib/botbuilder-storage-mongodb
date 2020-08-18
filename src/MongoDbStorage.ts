@@ -1,57 +1,16 @@
 import { Storage, StoreItems } from 'botbuilder';
-import { MongoClient, Collection, ObjectID, MongoClientOptions } from 'mongodb';
-import { MongoDbStorageConfig } from './MongoDbStorageConfig';
+import { Collection, ObjectID, MongoClient } from 'mongodb';
 import { MongoDbStorageError } from './MongoDbStorageError';
 import { MongoDocumentStoreItem } from './MongoDocumentStoreItem';
 
 export class MongoDbStorage implements Storage {
-  private config: MongoDbStorageConfig;
-  private client: MongoClient;
   static readonly DEFAULT_COLLECTION_NAME: string = "BotFrameworkState";
   static readonly DEFAULT_DB_NAME: string = "BotFramework";
-  static readonly DEFAULT_CLIENT_OPTIONS: MongoClientOptions = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  } as MongoClientOptions
 
-  constructor(config: MongoDbStorageConfig) {
-    this.config = MongoDbStorage.ensureConfig({ ...config });
-  }
+  protected readonly targetCollection: Collection<MongoDocumentStoreItem>;
 
-  public static ensureConfig(config: MongoDbStorageConfig): MongoDbStorageConfig {
-    if (!config) {
-      throw MongoDbStorageError.NO_CONFIG_ERROR;
-    }
-
-    if (!config.url || config.url.trim() === '') {
-      throw MongoDbStorageError.NO_URL_ERROR;
-    }
-
-    if (!config.database || config.database.trim() == '') {
-      config.database = MongoDbStorage.DEFAULT_DB_NAME;
-    }
-
-    if (!config.collection || config.collection.trim() == '') {
-      config.collection = MongoDbStorage.DEFAULT_COLLECTION_NAME;
-    }
-
-    if (!config.clientOptions) {
-      config.clientOptions = MongoDbStorage.DEFAULT_CLIENT_OPTIONS;
-    }
-
-    return config as MongoDbStorageConfig
-  }
-
-  public async connect(): Promise<MongoClient> {
-    this.client = await MongoClient.connect(this.config.url, this.config.clientOptions);
-    return this.client;
-  }
-
-  public async ensureConnected(): Promise<MongoClient> {
-    if (!this.client) {
-      await this.connect();
-    }
-    return this.client;
+  constructor(collection: Collection<MongoDocumentStoreItem>) {
+    this.targetCollection = collection;
   }
 
   public async read(stateKeys: string[]): Promise<StoreItems> {
@@ -59,13 +18,9 @@ export class MongoDbStorage implements Storage {
       return {};
     }
 
-    await this.ensureConnected();
+    const docs = await (await this.targetCollection.find(MongoDbStorage.createQuery(stateKeys))).toArray();
 
-    const docs = await this.Collection.find({ _id: { $in: stateKeys } });
-    const storeItems: StoreItems = (await docs.toArray()).reduce((accum, item) => {
-      accum[item._id] = item.state;
-      return accum;
-    }, {});
+    const storeItems: StoreItems = MongoDbStorage.packStoreItems(docs);
 
     return storeItems;
   }
@@ -75,8 +30,30 @@ export class MongoDbStorage implements Storage {
       return;
     }
 
-    await this.ensureConnected();
+    const operations = MongoDbStorage.createBulkOperations(changes);
 
+    await this.targetCollection.bulkWrite(operations);
+  }
+
+  public async delete(keys: string[]): Promise<void> {
+    if (!keys || keys.length == 0) {
+      return;
+    }
+    await this.targetCollection.deleteMany(MongoDbStorage.createQuery(keys));
+  }
+
+  public static packStoreItems(items: MongoDocumentStoreItem[]): StoreItems {
+    return items.reduce((accum, item) => {
+      accum[item._id] = item.state;
+      return accum;
+    }, {});
+  }
+
+  public static createQuery(stateKeys: string[]) {
+    return { _id: { $in: stateKeys } };
+  }
+
+  public static createBulkOperations(changes: StoreItems) {
     const operations = [];
 
     Object.keys(changes).forEach(key => {
@@ -89,26 +66,19 @@ export class MongoDbStorage implements Storage {
           filter: MongoDbStorage.createFilter(key, oldETag),
           update: {
             $set: {
-              state: state,
-              dt: new Date()
+              state: state
+            },
+            $currentDate: {
+              dt: { $type: 'date' }
             }
           },
           upsert: shouldSlam
         }
-      })
-    })
-
-    const bulkResults = await this.Collection.bulkWrite(operations);
-    //TODO: process bulk results: if 0 modified, 0 upserted then throw exception because state was not mutated.
+      });
+    });
+    return operations;
   }
 
-  public async delete(keys: string[]): Promise<void> {
-    if (!keys || keys.length == 0) {
-      return;
-    }
-    await this.ensureConnected();
-    await this.Collection.deleteMany({ _id: { $in: keys } });
-  }
 
   public static shouldSlam(etag: any) {
     return (etag === '*' || !etag);
@@ -121,14 +91,7 @@ export class MongoDbStorage implements Storage {
     return { _id: key, 'state.eTag': etag };
   }
 
-  get Collection(): Collection<MongoDocumentStoreItem> {
-    return this.client.db(this.config.database).collection(this.config.collection);
-  }
-
-  public async close() {
-    if (this.client) {
-      await this.client.close();
-      delete this.client;
-    }
+  public static getCollection(client: MongoClient, dbName: string = MongoDbStorage.DEFAULT_DB_NAME, collectionName: string = MongoDbStorage.DEFAULT_COLLECTION_NAME): Collection<MongoDocumentStoreItem> {
+    return client.db(dbName).collection(collectionName)
   }
 }

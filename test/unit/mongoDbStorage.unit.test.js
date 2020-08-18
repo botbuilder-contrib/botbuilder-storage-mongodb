@@ -1,7 +1,7 @@
 const assert = require('assert');
 const { MongoDbStorage } = require('../../lib/MongoDbStorage');
 const { MongoDbStorageError } = require('../../lib/MongoDbStorageError');
-
+const { MongoDocumentStoreItem } = require('../../lib/MongoDocumentStoreItem');
 const sinon = require('sinon');
 
 //require MongoClient to set up fakes and stubs, not actual database connectivity
@@ -92,200 +92,50 @@ describe('MongoDbStorage ', function () {
     });
   });
 
-  describe('ensureConfig', function () {
+  describe('createQuery', function () {
+    it('composes query with items in array', function () {
+      const actual = MongoDbStorage.createQuery(['a', 'b'])
+      assert.deepStrictEqual(actual, { _id: { '$in': ['a', 'b'] } })
 
-    it('should throw an error if config is not passed in', function () {
-      const actual = () => MongoDbStorage.ensureConfig();
-      assert.throws(actual, MongoDbStorageError.NO_CONFIG_ERROR);
-    });
+    })
+  })
 
-    it('should throw an error if config is empty', function () {
-      const actual = () => MongoDbStorage.ensureConfig({});
-      assert.throws(actual, MongoDbStorageError.NO_URL_ERROR);
-    });
-
-    it('should use supplied database name', function () {
-      const expected = 'someDb';
-      const actual = MongoDbStorage.ensureConfig({
-        url: 'u',
-        database: expected
-      });
-      assert.equal(actual.database, expected);
-    });
-
-    it('should use default database name', function () {
-      const expected = MongoDbStorage.DEFAULT_DB_NAME;
-      const actual = MongoDbStorage.ensureConfig({
-        url: 'u',
-      });
-      assert.equal(actual.database, expected, 'Expected default database name');
-    });
-
-    it('should use default collection name', function () {
-      const expected = MongoDbStorage.DEFAULT_COLLECTION_NAME;
-      const actual = MongoDbStorage.ensureConfig({
-        url: 'u',
-      });
-      assert.equal(actual.collection, expected, 'Expected default collection name');
-    });
-
-    it('should use supplied collection name', function () {
-      const expected = 'someCollection';
-      const actual = MongoDbStorage.ensureConfig({
-        url: 'u',
-        collection: expected
-      });
-      assert.equal(actual.collection, expected, 'Expected default collection name');
-    });
-
-    it('should use default MongoClientOptions', function () {
-      const expected = MongoDbStorage.DEFAULT_CLIENT_OPTIONS;
-      const actual = MongoDbStorage.ensureConfig({ url: 'u' });
-      assert.equal(actual.clientOptions, expected);
-    });
-
-  });
-  
-  describe('connect', async function () {
-    it('should call MongoClient.connect.', async function () {
+  describe('packStorageItems', function () {
+    it('should return storeItems as a dictionary', function () {
       //arrange
-      sinon.stub(MongoClient, "connect");
-      const settings = {
-        url: 'fake_url',
-        database: 'fake_db'
+      const subject = [{
+        _id: 'abc',
+        state: 'some_state'
+      },
+      {
+        _id: '123',
+        state: {
+          foo: 'bar'
+        }
+      }
+      ];
+
+      const expected = {
+        'abc': 'some_state',
+        '123': {
+          foo: 'bar'
+        }
       };
-      const storage = new MongoDbStorage(settings);
-
       //act
-      await storage.connect();
+
+      let storeItems = MongoDbStorage.packStoreItems(subject);
 
       //assert
-      assert(MongoClient.connect.calledOnce);
-
-      //cleanup
-      MongoClient.connect.restore();
-    });
-
-    it('should call MongoClient.connect with passed in url', async function () {
-      //arrange
-      sinon.stub(MongoClient, "connect");
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-
-      //act
-      await storage.connect();
-
-      //assert
-      assert.equal('fake_url', MongoClient.connect.getCall(0).args[0]);
-
-      //cleanup
-      MongoClient.connect.restore();
-    });
-
-    it('should call MongoClient.connect with useNewUrlParser = true option', async function () {
-      //arrange
-      sinon.stub(MongoClient, "connect");
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-
-      //act
-      await storage.connect();
-
-      //assert
-      assert.ok(MongoClient.connect.getCall(0).args[1].useNewUrlParser);
-
-      //cleanup
-      MongoClient.connect.restore();
+      assert.deepEqual(storeItems, expected);
     });
   });
 
-  describe('ensureConnected', async function () {
-    it('should call connect if client does not exist.', async function () {
-      //arrange
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(storage, "connect");
-
-      //act
-      await storage.ensureConnected();
-
-      //assert
-      assert(storage.connect.calledOnce);
-
-      //cleanup
-      storage.connect.restore();
-    });
-    it('should not call connect if client exists.', async function () {
-      //arrange
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(storage, "connect");
-
-      //act
-      storage.client = "fake_client";
-      await storage.ensureConnected();
-
-      //assert
-      assert(!storage.connect.calledOnce);
-
-      //cleanup
-      storage.connect.restore();
-    });
-  });
   describe('read', async function (done) {
-    it('should call Collection.find with query that includes keys that are passed in', async function () {
-      //arrange
-
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      let query = null;
-      stub1 = sinon.stub(storage, 'Collection').value({
-        find: function (q) {
-          return {
-            toArray: function () {
-              query = q;
-              return [];
-            }
-          };
-        }
-      });
-      const keys = ['abc', '123', '456'];
-
-      //act
-      await storage.connect();
-      await storage.read(keys);
-
-      //assert
-      assert.deepEqual(query, {
-        _id: {
-          $in: keys
-        }
-      });
-
-      //cleanup
-      MongoClient.connect.restore();
-    });
-
     it('should return storeItems as a dictionary', async function () {
       //arrange
 
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      stub1 = sinon.stub(storage, 'Collection').value({
+
+      const collection = {
         find: function (q) {
           return {
             toArray: function () {
@@ -307,8 +157,12 @@ describe('MongoDbStorage ', function () {
             }
           };
         }
-      });
+      };
+
+      const storage = new MongoDbStorage(collection);
+
       const keys = ['abc', '123', '456'];
+
       const expected = {
         'abc': 'some_state',
         '123': {
@@ -316,120 +170,34 @@ describe('MongoDbStorage ', function () {
         },
         '456': 1234
       };
+
       //act
-      await storage.connect();
       let storeItems = await storage.read(keys);
 
       //assert
       assert.deepEqual(storeItems, expected);
-
-      //cleanup
-      MongoClient.connect.restore();
-    });
-  });
-
-  describe('read', async function (done) {
-    it('should call Collection.find with query that includes keys that are passed in', async function () {
-      //arrange
-
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      let query = null;
-      stub1 = sinon.stub(storage, 'Collection').value({
-        find: function (q) {
-          return {
-            toArray: function () {
-              query = q;
-              return [];
-            }
-          };
-        }
-      });
-      const keys = ['abc', '123', '456'];
-
-      //act
-      await storage.connect();
-      await storage.read(keys);
-
-      //assert
-      assert.deepEqual(query, {
-        _id: {
-          $in: keys
-        }
-      });
-
-      //cleanup
-      MongoClient.connect.restore();
-    });
-
-    it('should return storeItems as a dictionary', async function () {
-      //arrange
-
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      stub1 = sinon.stub(storage, 'Collection').value({
-        find: function (q) {
-          return {
-            toArray: function () {
-              return [{
-                _id: 'abc',
-                state: 'some_state'
-              },
-              {
-                _id: '123',
-                state: {
-                  foo: 'bar'
-                }
-              },
-              {
-                _id: '456',
-                state: 1234
-              }
-              ];
-            }
-          };
-        }
-      });
-      const keys = ['abc', '123', '456'];
-      const expected = {
-        'abc': 'some_state',
-        '123': {
-          foo: 'bar'
-        },
-        '456': 1234
-      };
-      //act
-      await storage.connect();
-      let storeItems = await storage.read(keys);
-
-      //assert
-      assert.deepEqual(storeItems, expected);
-
-      //cleanup
-      MongoClient.connect.restore();
     });
   });
 
   describe('write', async function (done) {
-    it('creates options with updateOne for each key in changes object.', async function () {
+    it('calls bulkWrite', async function () {
       //arrange
-      let operations = null;
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      stub1 = sinon.stub(storage, 'Collection').value({
-        bulkWrite: function (o) {
-          operations = o;
+      const collection = { bulkWrite: sinon.fake() }
+      const target = new MongoDbStorage(collection)
+      //act
+      await target.write({
+        'key_one': {
+          item: "foo",
+          eTag: "*"
         }
       });
+      //assert
+      assert.ok(collection.bulkWrite.called);
+    })
+  })
+  describe('createBulkOperations', function () {
+    it('creates options with updateOne for each key in changes object.', function () {
+      //arrange
       const changes = {
         'key_one': {
           item: "foo",
@@ -441,31 +209,16 @@ describe('MongoDbStorage ', function () {
         }
       };
 
-      //act
-      await storage.connect();
-      await storage.write(changes);
+      const actual = MongoDbStorage.createBulkOperations(changes);
 
       //assert
-      assert.equal(operations[0].updateOne.filter._id, "key_one");
-      assert.equal(operations[1].updateOne.filter._id, "key_two");
-
-      //cleanup
-      MongoClient.connect.restore();
+      assert.equal(actual[0].updateOne.filter._id, "key_one");
+      assert.equal(actual[1].updateOne.filter._id, "key_two");
     });
 
-    it('creates sets upsert property to true if shouldSlam.', async function () {
+    it('sets upsert property to true if shouldSlam.', async function () {
       //arrange
-      let operations = null;
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      stub1 = sinon.stub(storage, 'Collection').value({
-        bulkWrite: function (o) {
-          operations = o;
-        }
-      });
+
       const changes = {
         'key_one': {
           item: "foo",
@@ -474,28 +227,14 @@ describe('MongoDbStorage ', function () {
       };
 
       //act
-      await storage.connect();
-      await storage.write(changes);
+      const actual = MongoDbStorage.createBulkOperations(changes);
 
       //assert
-      assert.ok(operations[0].updateOne.upsert);
-
-      //cleanup
-      MongoClient.connect.restore();
+      assert.ok(actual[0].updateOne.upsert);
     });
-    it('creates sets upsert property to false if !shouldSlam.', async function () {
+
+    it('sets upsert property to false if !shouldSlam.', async function () {
       //arrange
-      let operations = null;
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      stub1 = sinon.stub(storage, 'Collection').value({
-        bulkWrite: function (o) {
-          operations = o;
-        }
-      });
       const changes = {
         'key_one': {
           item: "foo",
@@ -504,29 +243,14 @@ describe('MongoDbStorage ', function () {
       };
 
       //act
-      await storage.connect();
-      await storage.write(changes);
+      const actual = MongoDbStorage.createBulkOperations(changes);
 
       //assert
-      assert.ok(operations[0].updateOne.upsert == false);
-
-      //cleanup
-      MongoClient.connect.restore();
+      assert.ok(actual[0].updateOne.upsert == false);
     });
 
-    it('creates $set property with correct state update values', async function () {
+    it('creates $set property with item value', async function () {
       //arrange
-      let operations = null;
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      stub1 = sinon.stub(storage, 'Collection').value({
-        bulkWrite: function (o) {
-          operations = o;
-        }
-      });
       const changes = {
         'key_one': {
           item: "foo",
@@ -535,125 +259,74 @@ describe('MongoDbStorage ', function () {
       };
 
       //act
-      await storage.connect();
-      await storage.write(changes);
+      const actual = MongoDbStorage.createBulkOperations(changes);
 
       //assert
-      assert.deepEqual(operations[0].updateOne.update.$set.state.item, "foo");
+      assert.deepEqual(actual[0].updateOne.update.$set.state.item, changes.key_one.item);
+    });
+   
+    it('updates dt field to current date', async function () {
+      //arrange
+      const changes = {
+        'key_one': {
+          item: "foo",
+          eTag: "*"
+        }
+      };
 
-      //cleanup
-      MongoClient.connect.restore();
+      //act
+      const actual = MongoDbStorage.createBulkOperations(changes);
+
+      //assert
+      assert.deepStrictEqual(actual[0].updateOne.update.$currentDate, {dt: {$type: 'date'}});
     });
   });
 
   describe('delete', async function (done) {
-    it('creates options with updateOne for each key in changes object.', async function () {
+    it('calls delete with keys query', async function () {
       //arrange
       let query = null;
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-      sinon.stub(MongoClient, "connect");
-      stub1 = sinon.stub(storage, 'Collection').value({
-        deleteMany: function (q) {
-          query = q;
-        }
-      });
+      const storage = new MongoDbStorage({ deleteMany: function (q) { query = q } });
       const keys = ['123', 'aaa', 'bbb'];
+
       //act
-      await storage.connect();
       await storage.delete(keys);
 
       //assert
-      assert.deepEqual(query, {
+      assert.deepStrictEqual(query, {
         _id: {
           $in: keys
         }
       });
-
-      //cleanup
-      MongoClient.connect.restore();
     });
   });
 
-  describe('collection property', async function (done) {
-    it('calls MongoClient.db with database name', async function () {
+  describe('getCollection', function(){
+    it('uses default DB and Collection names', function(){
       //arrange
-      let database = null;
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db'
-      });
-
-      storage.client = {
-        db: function (d) {
-          database = d;
-          return {
-            collection: function () { }
-          }
-        }
-      };
-
+      collectionFake = sinon.fake();
+      dbFake = sinon.fake.returns({collection: collectionFake});
+      
       //act
-      let collection = storage.Collection;
-
+      MongoDbStorage.getCollection({db: dbFake});
+      
       //assert
-      assert.equal(database, "fake_db");
-    });
-    it('calls MongoClient.db.collection with collection name', async function () {
-      //arrange
-      let collectionName = 'fake_collection_' + new Date();
-      let actual = null;
-      const storage = new MongoDbStorage({
-        url: 'fake_url',
-        database: 'fake_db',
-        collection: collectionName
-      });
-
-      storage.client = {
-        db: function (d) {
-          return {
-            collection: function (c) {
-              actual = c;
-            }
-          }
-        }
-      };
-
-      //act
-      let collection = storage.Collection;
-
-      //assert
-      assert.equal(actual, collectionName);
-    });
-  });
-
-  describe('close', function () {
-    it('Closes existing client', async function () {
-      var target = new MongoDbStorage(getSettings());
-      let subject = {
-
-        isClosed: false,
-        close: function () {
-          this.isClosed = true;
-        }
-      }
-      target.client = subject;
-
-      target.close();
-
-      assert.ok(subject.isClosed);
+      assert.ok(dbFake.calledWith(MongoDbStorage.DEFAULT_DB_NAME));
+      assert.ok(collectionFake.calledWith(MongoDbStorage.DEFAULT_COLLECTION_NAME));
     })
 
-    it('Skips closing if no client', async function () {
-      var target = new MongoDbStorage(getSettings());
-
-      target.client = null;
-
-      target.close();
-
-      assert.ok(!target.client);
+    it('overrides default DB and Collection names when supplied', function(){
+      //arrange
+      collectionFake = sinon.fake();
+      dbFake = sinon.fake.returns({collection: collectionFake});
+      
+      //act
+      MongoDbStorage.getCollection({db: dbFake},dbName='db1', collectionName = 'collection1');
+      
+      //assert
+      assert.ok(dbFake.calledWith('db1'));
+      assert.ok(collectionFake.calledWith('collection1'));
     })
   })
+
 });
