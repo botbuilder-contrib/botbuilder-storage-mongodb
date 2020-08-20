@@ -26,6 +26,12 @@ jobs:
      
       - name: build
         run: npm run build
+
+      - name: debug path
+        run: pwd
+
+      - name: debug files
+        run: ls -li
         
       - name: Copy lib to package
         run: cp -r ./lib/ ./package/
