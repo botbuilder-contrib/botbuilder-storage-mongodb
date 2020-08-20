@@ -37,7 +37,7 @@ jobs:
         run: cp -r ./lib/ ./package/
 
       - name: Copy core files  to package
-        run: cp ./{CODE_OF_COUNDUCT.md,Contributing.md,LICENSE,README.md,index.js,package.json} ./package/
+        run: cp ./{CODE_OF_CONDUCT.md,Contributing.md,LICENSE,README.md,index.js,package.json} ./package/
  
       - name: Publish package to NPM
         run: npm publish package --dry-run
