@@ -4,7 +4,8 @@ This project provides a MongoDb storage mechanism for [Bot Framework-JS SDK V4.]
 
 It allows you to store bot state in MongoDB, so that you can scale out your bot, and be more resilient to bot server failures.
 
-![Build Status](https://dev.azure.com/BotBuilderPackages/mongoDBStorage/_apis/build/status/Pull%20Request%20Build?branchName=master)
+
+![Build and test](https://github.com/botbuilder-contrib/botbuilder-storage-mongodb/workflows/Build%20and%20test/badge.svg)
 
 ## Requirements
 

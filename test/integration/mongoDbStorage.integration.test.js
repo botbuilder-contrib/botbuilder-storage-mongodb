@@ -21,7 +21,7 @@
    let client;
 
    beforeEach(async function () {
-     client = new MongoClient(settings.url, { useNewUrlParser: true });
+     client = new MongoClient(settings.url, { useUnifiedTopology: true });
      await client.connect();
      const collection = client.db(settings.database).collection(settings.collection);
      storage = new MongoDbStorage(collection);     
