@@ -36,6 +36,6 @@ jobs:
         run: cp ./{CODE_OF_CONDUCT.md,Contributing.md,LICENSE,README.md,index.js,package.json} ./package/
  
       - name: Publish package to NPM
-        run: npm publish package --dry-run
+        run: npm publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_ACCESS_TOKEN }}
