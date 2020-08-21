@@ -26,13 +26,7 @@ jobs:
      
       - name: build
         run: npm run build
-
-      - name: debug path
-        run: pwd
-
-      - name: debug files
-        run: ls -li
-        
+     
       - name: Copy lib to package
         run: cp -r ./lib/ ./package/
 
@@ -40,7 +34,6 @@ jobs:
         run: cp ./{CODE_OF_CONDUCT.md,Contributing.md,LICENSE,README.md,index.js,package.json} ./package/
  
       - name: Publish package to NPM
-        run: npm publish package --dry-run
+        run: npm publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_ACCESS_TOKEN }}
-      
