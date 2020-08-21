@@ -13,6 +13,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v2
+        with:
+          refs: refs/tags/v1.0.0
 
       - uses: actions/setup-node@v1
         with:
@@ -34,6 +36,6 @@ jobs:
         run: cp ./{CODE_OF_CONDUCT.md,Contributing.md,LICENSE,README.md,index.js,package.json} ./package/
  
       - name: Publish package to NPM
-        run: npm publish package
+        run: npm publish package --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_ACCESS_TOKEN }}
