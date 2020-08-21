@@ -13,6 +13,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
 
       - uses: actions/setup-node@v1
         with:
@@ -25,16 +27,15 @@ jobs:
       # TODO: version bump, check-in?
      
       - name: build
-        run: npm build
-        
+        run: npm run build
+     
       - name: Copy lib to package
         run: cp -r ./lib/ ./package/
 
       - name: Copy core files  to package
-        run: cp ./{CODE_OF_COUNDUCT.md,Contributing.md,LICENSE,README.md,index.js,package.json} ./package/
+        run: cp ./{CODE_OF_CONDUCT.md,Contributing.md,LICENSE,README.md,index.js,package.json} ./package/
  
       - name: Publish package to NPM
-        run: npm publish package --dry-run
+        run: npm publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_ACCESS_TOKEN }}
-      
