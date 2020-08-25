@@ -1,6 +1,6 @@
 'use strict'
 
-const { BotFrameworkAdapter, ActivityTypes, ConversationState, UserState } = require('botbuilder');
+const { BotFrameworkAdapter, ActivityTypes, ConversationState, UserState, TurnContext } = require('botbuilder');
 const { MongoDbStorage } = require('../lib/MongoDbStorage');
 const BotGreeting = require('botbuilder-greeting');
 const { MongoClient } = require('mongodb');
@@ -24,15 +24,20 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
     const mongoClient = new MongoClient("mongodb://localhost:27017/?connectTimeoutMS=4000", { useUnifiedTopology: true });
     await mongoClient.connect();
 
-    // grab a collection handle off the connected client
+    // Grab a collection handle off the connected client
     const collection = MongoDbStorage.getCollection(mongoClient);
 
-    // create a MongoDbStorage, supplying the collection to it.
+    // Create a MongoDbStorage, supplying the collection to it.
     const mongoStorage = new MongoDbStorage(collection);
 
     // Use the mongoStorage instance for ConversationState and UserState
     const conversationState = new ConversationState(mongoStorage);
     const userState = new UserState(mongoStorage);
+
+    /*----------------------------------
+      At this point the storage is all set up.
+      Everything below here is demo of BotFramework. 
+    */
 
     //  Conversation State Property
     const conversationProperty = conversationState.createProperty("Convo");
@@ -41,9 +46,18 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
     const countProperty = userState.createProperty("CountProperty");
     const nameProperty = userState.createProperty("NameProperty");
 
+    server.post('/api/messages', async (req, res, next) => {
+      adapter.processActivity(req, res, processBotActivity).catch(e => {
+        console.error(e);
+        next(e)
+      });
+    });
 
-    server.post('/api/messages', async (req, res) => {
-      adapter.processActivity(req, res, async context => {
+    /**
+     * Process BotFramework's TurnContext
+     * @param {TurnContext} context 
+     */
+    const processBotActivity = async context => {
         if (context.activity.type == ActivityTypes.Message) {
 
           //Get all storage items
@@ -62,13 +76,15 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
           // Set User State Properties
           await nameProperty.set(context, name);
           await countProperty.set(context, count);
+
           // Save UserState changes to MondogD
           await userState.saveChanges(context);
 
           //Set Conversation State property
           await conversationProperty.set(context, conversation);
+
           //Save Conversation State to MongoDb
-          await conversationState.saveChanges(context);
+          await conversationState.saveChanges_(context);
 
         }
         // If activity type is DeleteUserData, invoke clean out userState
@@ -76,8 +92,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
           await userState.delete(context);
           await userState.saveChanges(context);
         }
-      });
-    });
+    }
+
   } catch (ex) {
     console.error(ex);
   }
