@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [ master ]
-    branches-ignore: 
-      - '.github/**'
   
 jobs:
   build_and_test:
