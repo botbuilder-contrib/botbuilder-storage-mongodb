@@ -1,0 +1,37 @@
+name: Bump master version
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      # Refrain from triggering on file change to package.json to prevent recursive trigger loop
+      - 'package.json'
+      # Refrain from triggering on workflows themselves - not funcitonal code
+      - '.github/workflows/**'
+      
+jobs:
+  bump-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: '0'        
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Git
+      run: |
+        git config user.email "1554735+nurih@users.noreply.github.com"
+        git config user.name "+N"
+    
+    - name: Bump version in package.json
+      run: npm version patch -m 'Bump version and set tag'
+    
+    - name: Push code
+      run: git push
+    
+    - name: Push tags
+      run: git push --tags
