@@ -35,9 +35,15 @@ jobs:
 
     - name: Unit Test
       run: npm run test:unit
-
-    - name: MongoDB container
-      run: docker run --name MongoDB -d -p 27017:27017 mongo:4.2
     
     - name: Integration tests
       run: npm run test:integration
+
+    services:
+      # Label used to access the service container
+      mongodb-service:
+        # Docker Hub image
+        image: mongo:latest
+        # Docker port mapping
+        ports:          
+          - 27017:27017
