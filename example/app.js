@@ -1,9 +1,10 @@
 'use strict'
 
-const { BotFrameworkAdapter, ActivityTypes, ConversationState, UserState, TurnContext } = require('botbuilder');
+const { BotFrameworkAdapter } = require('botbuilder');
 const { MongoDbStorage } = require('../lib/MongoDbStorage');
 const BotGreeting = require('botbuilder-greeting');
 const { MongoClient } = require('mongodb');
+const { Bot } = require('./bot');
 
 let server = require('restify').createServer();
 
@@ -30,69 +31,22 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
     // Create a MongoDbStorage, supplying the collection to it.
     const mongoStorage = new MongoDbStorage(collection);
 
-    // Use the mongoStorage instance for ConversationState and UserState
-    const conversationState = new ConversationState(mongoStorage);
-    const userState = new UserState(mongoStorage);
 
     /*----------------------------------
-      At this point the storage is all set up.
-      Everything below here is demo of BotFramework. 
+    At this point the storage is all set up.
+    Everything below here is demo of BotFramework. 
     */
 
-    //  Conversation State Property
-    const conversationProperty = conversationState.createProperty("Convo");
+    const bot = new Bot(mongoStorage);
 
-    // User State properties
-    const countProperty = userState.createProperty("CountProperty");
-    const nameProperty = userState.createProperty("NameProperty");
 
     server.post('/api/messages', async (req, res, next) => {
-      adapter.processActivity(req, res, processBotActivity).catch(e => {
+      adapter.processActivity(req, res, bot.processBotActivity.bind(bot)).catch(e => {
         console.error(e);
         next(e)
       });
     });
 
-    /**
-     * Process BotFramework's TurnContext
-     * @param {TurnContext} context 
-     */
-    const processBotActivity = async context => {
-        if (context.activity.type == ActivityTypes.Message) {
-
-          //Get all storage items
-          let conversation = await conversationProperty.get(context, { MessageCount: 0, UserReplies: [] });
-          let count = await countProperty.get(context, 0);
-          let name = await nameProperty.get(context, context.activity.text);
-
-          // Change the data in some way
-          count++;
-          conversation.MessageCount = count;
-          conversation.UserReplies.push(context.activity.text);
-
-          // Respond back 
-          await context.sendActivity(`${count} - Hi ${name}! You said ${context.activity.text}`);
-
-          // Set User State Properties
-          await nameProperty.set(context, name);
-          await countProperty.set(context, count);
-
-          // Save UserState changes to MondogD
-          await userState.saveChanges(context);
-
-          //Set Conversation State property
-          await conversationProperty.set(context, conversation);
-
-          //Save Conversation State to MongoDb
-          await conversationState.saveChanges_(context);
-
-        }
-        // If activity type is DeleteUserData, invoke clean out userState
-        else if (context.activity.type === ActivityTypes.DeleteUserData) {
-          await userState.delete(context);
-          await userState.saveChanges(context);
-        }
-    }
 
   } catch (ex) {
     console.error(ex);
