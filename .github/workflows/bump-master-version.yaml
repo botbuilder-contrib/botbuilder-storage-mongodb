@@ -24,8 +24,8 @@ jobs:
     
     - name: Setup Git
       run: |
-        git config user.email ${{ secrets.GITHUB_USER_EMAIL }}
-        git config user.name ${{ secrets.GITHUB_USER_NAME }}
+        git config user.email ${{ secrets.GIT_USER_EMAIL }}
+        git config user.name ${{ secrets.GIT_USER_NAME }}
     
     - name: Bump version in package.json
       run: npm version patch -m 'Bump version and set tag'
