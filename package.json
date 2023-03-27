@@ -1,6 +1,6 @@
 {
   "name": "botbuilder-storage-mongodb",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "license": "MIT",
   "contributors": [
     {
@@ -22,24 +22,23 @@
     "url": "https://github.com/botbuilder-contrib/botbuilder-storage-mongodb.git"
   },
   "dependencies": {
-    "@types/mongodb": "^3.5.25",
-    "botbuilder": "^4.9.3",
-    "mongodb": "^3.6.0",
+    "@types/mongodb": "^4.0.7",
+    "botbuilder": "^4.19.3",
+    "mongodb": "^5.1.0",
     "request": "^2.88.2"
   },
   "scripts": {
-    "test:unit": "npm run build && nyc mocha test/unit",
-    "test:integration": "npm run build && nyc mocha test/integration",
-    "cover": "npm run build && nyc mocha test && nyc report --reporter html && start /max coverage/index.html",
+    "test:unit": "npm run build && mocha test/unit",
+    "test:integration": "npm run build && mocha test/integration",
     "build": "node node_modules/typescript/bin/tsc"
   },
   "devDependencies": {
-    "@types/mocha": "^8.0.1",
-    "@types/node": "^14.0.27",
-    "mocha": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.15.8",
+    "mocha": "^10.2",
     "nyc": "^15.1.0",
-    "sinon": "^9.0.2",
-    "source-map-support": "^0.5.19",
-    "typescript": "^3.9.7"
+    "sinon": "^15.0.2",
+    "source-map-support": "^0.5.21",
+    "typescript": "^5.0.2"
   }
 }

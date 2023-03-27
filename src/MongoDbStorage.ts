@@ -1,5 +1,5 @@
 import { Storage, StoreItems } from 'botbuilder';
-import { Collection, ObjectID, MongoClient } from 'mongodb';
+import { Collection, ObjectId, MongoClient, BulkWriteResult } from 'mongodb';
 import { MongoDbStorageError } from './MongoDbStorageError';
 import { MongoDocumentStoreItem } from './MongoDocumentStoreItem';
 
@@ -32,7 +32,7 @@ export class MongoDbStorage implements Storage {
 
     const operations = MongoDbStorage.createBulkOperations(changes);
 
-    await this.targetCollection.bulkWrite(operations);
+    await this.targetCollection.bulkWrite(operations);    
   }
 
   public async delete(keys: string[]): Promise<void> {
@@ -60,7 +60,7 @@ export class MongoDbStorage implements Storage {
       const state = changes[key];
       const shouldSlam = MongoDbStorage.shouldSlam(state.eTag);
       const oldETag = state.eTag;
-      state.eTag = new ObjectID().toHexString();
+      state.eTag = new ObjectId().toHexString();
       operations.push({
         updateOne: {
           filter: MongoDbStorage.createFilter(key, oldETag),
